@@ -6,6 +6,7 @@ import android.util.Log
 import com.baton.app.handover.Detector
 import com.baton.app.handover.HandoverMachine
 import com.baton.app.handover.HandoverMachine.State
+import com.baton.app.handover.HandoverStore
 import com.baton.app.handover.OpenItem
 import com.baton.app.i18n.ItemText
 import com.baton.app.vehicle.ProfileDiscovery
@@ -45,6 +46,7 @@ class BatonController(
 
     private val speaker = Speaker(context)
     private val detector = Detector()
+    private val store = HandoverStore(context)
     private var signals: VehicleSignals? = null
     private var machine: HandoverMachine? = null
 
@@ -52,8 +54,12 @@ class BatonController(
         delay(500) // SDK 서비스 연결 대기
         val profile = ProfileDiscovery(vehicle).discover().profile
         val m = HandoverMachine(profile, detector).also { machine = it }
+        store.load()?.let { (saved, history) ->
+            m.restore(saved, history)
+            Log.i(TAG, "복원: ${saved::class.simpleName}, 이력 ${history.size}건")
+        }
         val s = VehicleSignals(vehicle, profile).also { signals = it }
-        _ui.value = _ui.value.copy(ready = true, profile = profile)
+        _ui.value = _ui.value.copy(ready = true, profile = profile, state = m.state)
         s.start()
         s.snapshot.collect { snap ->
             val before = m.state
@@ -64,6 +70,7 @@ class BatonController(
                 preview = if (after is State.Parked) detector.detect(profile, snap) else emptyList(),
             )
             if (before::class != after::class) Log.i(TAG, "상태: ${before::class.simpleName} → ${after::class.simpleName} (좌석=${snap.seatOccupied.mapKeys { it.key.code }}, 남은 일=${(after as? State.Away)?.handover?.open?.size ?: (after as? State.Boarded)?.handover?.open?.size ?: "-"})")
+            if (before != after) store.save(after, m.history)
             announce(before, after)
         }
     }

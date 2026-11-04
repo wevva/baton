@@ -54,7 +54,12 @@ class HandoverMachine(
             }
             is State.Away -> {
                 val h = refresh(cur.handover, s)
-                if (s.anyoneSeated) State.Boarded(h.copy(socAtBoard = s.batterySoc)) else State.Away(h)
+                when {
+                    // 앱이 꺼져 있는 사이 누군가 이미 출발한 경우: 이력에 남기고 주행 상태로
+                    !parked && s.gear != Gear.UNKNOWN -> { history += h; State.Driving }
+                    s.anyoneSeated -> State.Boarded(h.copy(socAtBoard = s.batterySoc))
+                    else -> State.Away(h)
+                }
             }
             is State.Boarded -> {
                 val h = refresh(cur.handover, s)
@@ -67,6 +72,13 @@ class HandoverMachine(
             }
         }
         return state
+    }
+
+    /** 저장해 둔 상태로 복원 (앱 재시작·차량 전원 off 후) */
+    fun restore(saved: State, savedHistory: List<Handover>) {
+        state = saved
+        history.clear()
+        history += savedHistory
     }
 
     /** 현재 신호로 다시 점검: 사라진 항목은 해결 처리, 새로 생긴 항목은 추가 */

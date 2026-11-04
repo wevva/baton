@@ -103,6 +103,22 @@ class HandoverMachineTest {
         assertEquals(State.Parked, s)
     }
 
+    @Test fun 저장된_인계를_복원하면_이어서_동작한다() {
+        val saved = HandoverMachine.Handover(parkedAtMs = 1, socAtPark = 70, open = listOf(OpenItem(OpenItem.Type.CABIN_LIGHT_ON)))
+        val m = HandoverMachine(sedan)
+        m.restore(State.Away(saved), emptyList())
+        val s = m.onSnapshot(snap(seated = true, cabin = true)) as State.Boarded
+        assertEquals(70, s.handover.socAtPark)
+        assertEquals(1, s.handover.open.size)
+    }
+
+    @Test fun 앱이_꺼진_사이_출발했다면_이력으로_넘긴다() {
+        val m = HandoverMachine(sedan)
+        m.restore(State.Away(HandoverMachine.Handover(1, 70, emptyList())), emptyList())
+        assertEquals(State.Driving, m.onSnapshot(snap(gear = Gear.DRIVE, seated = true)))
+        assertEquals(1, m.history.size)
+    }
+
     @Test fun 위치코드는_왕복_변환된다() {
         assertEquals(Spot(3, Side.CENTER), Spot.fromCode("R3C"))
     }
