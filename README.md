@@ -12,6 +12,10 @@
 |---|---|
 | ![일본어](docs/images/boarded_ja.png) | ![확인 처리](docs/images/acknowledge_undo.png) |
 
+| 인계 이력 |
+|---|
+| ![이력](docs/images/history_ko.png) |
+
 ## 무엇을 하나요
 
 1. **자동 기록**: 기어가 P에 있고 모든 좌석이 비면(하차), 그 순간의 미해결 항목을 차량 신호로 기록합니다. 사람이 입력할 필요가 없습니다.
@@ -19,6 +23,9 @@
 3. **신호로 확인되면 자동 소거**: 창문이 닫히거나 문이 잠기는 등 차량 신호로 해결이 확인되면 "○○ 닫힘 확인"이라고 알리고 목록에서 지웁니다.
 4. **에너지 인계**: 주차할 때 배터리 잔량과 지금 잔량을 함께 보여 줍니다.
 5. **확인 처리 + 되돌리기**: 신호로 해결할 수 없는 항목(예: 배터리 부족)은 눌러서 확인 처리하고, 8초 안에 되돌릴 수 있습니다.
+6. **바통 수령증**: 다음 운전자가 "받았어요"를 한 번 누르면 수령 시각이 기록됩니다.
+7. **출발 시 안전 알림**: 안전 항목이 남은 채 D단에 들어가면 한 번만 음성으로 알립니다. 주행 중에는 한 줄 상태만 표시합니다.
+8. **인계 이력**: 주차 중에 지난 인계(남긴 일·해결·수령·배터리 변화)를 볼 수 있습니다.
 
 ### 현재 감지 항목
 | 항목 | 우선순위 | 해결 확인 |
@@ -45,7 +52,7 @@ vehicle/   Spot·VehicleProfile(차량 구성) · ProfileDiscovery(자동 인식
 handover/  OpenItem(인계 항목) · Detector(미해결 탐지) · HandoverMachine(주행→주차→하차→탑승→출발) · HandoverStore(저장)
 i18n/      ItemText(받는 사람 언어로 문장 생성) · AppLanguage(앱별 언어)
 voice/     Speaker(Pleos TTS, 온디바이스)
-ui/        HandoverScreen(인계 화면)
+ui/        HandoverScreen(인계 화면) · HistoryScreen(인계 이력)
 BatonApp · BatonController   앱 수명 동안 차량 연결·상태 유지
 ```
 

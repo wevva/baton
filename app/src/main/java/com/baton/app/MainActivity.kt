@@ -53,7 +53,12 @@ class MainActivity : ComponentActivity() {
             MaterialTheme(colorScheme = darkColorScheme()) {
                 val ui by controller.ui.collectAsState()
                 var diagnostics by remember { mutableStateOf(false) }
-                if (diagnostics) {
+                var history by remember { mutableStateOf(false) }
+                // 주행 중이면 이력 화면을 닫는다
+                if (history && ui.state is com.baton.app.handover.HandoverMachine.State.Driving) history = false
+                if (history) {
+                    com.baton.app.ui.HistoryScreen(ui.history, onBack = { history = false })
+                } else if (diagnostics) {
                     ProbeScreen(
                         signals = signals,
                         onReadAll = { probe.readAll() },
@@ -70,6 +75,7 @@ class MainActivity : ComponentActivity() {
                         onAcknowledge = controller::acknowledge,
                         onUndo = controller::undo,
                         onReceive = controller::receive,
+                        onHistory = { history = true },
                     )
                 }
             }

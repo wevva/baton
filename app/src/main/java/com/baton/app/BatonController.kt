@@ -35,6 +35,8 @@ data class UiState(
     val acknowledged: Set<String> = emptySet(),
     /** 방금 확인 처리한 항목 — 8초간 되돌리기 가능 */
     val undoable: OpenItem? = null,
+    /** 출발까지 끝난 인계 기록 (최근 것이 먼저) */
+    val history: List<HandoverMachine.Handover> = emptyList(),
 )
 
 /**
@@ -63,7 +65,7 @@ class BatonController(
             Log.i(TAG, "복원: ${saved::class.simpleName}, 이력 ${history.size}건")
         }
         val s = VehicleSignals(vehicle, profile).also { signals = it }
-        _ui.value = _ui.value.copy(ready = true, profile = profile, state = m.state)
+        _ui.value = _ui.value.copy(ready = true, profile = profile, state = m.state, history = m.history.reversed())
         s.start()
         s.snapshot.collect { snap ->
             val before = m.state
@@ -71,6 +73,7 @@ class BatonController(
             _ui.value = _ui.value.copy(
                 snapshot = snap,
                 state = after,
+                history = m.history.reversed(),
                 preview = if (after is State.Parked) detector.detect(profile, snap) else emptyList(),
                 // 새 인계가 시작되면(하차) 이전 확인 기록은 비운다
                 acknowledged = if (after is State.Away && before !is State.Away) emptySet() else _ui.value.acknowledged,

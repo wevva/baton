@@ -56,6 +56,7 @@ fun HandoverScreen(
     onAcknowledge: (OpenItem) -> Unit = {},
     onUndo: () -> Unit = {},
     onReceive: () -> Unit = {},
+    onHistory: () -> Unit = {},
 ) {
     // 화면 언어 = 현재 앱 설정 언어 (LocalConfiguration이 바뀌면 다시 그림)
     val config = LocalConfiguration.current
@@ -63,7 +64,7 @@ fun HandoverScreen(
     val t = remember(config) { ItemText(ctx, config.locales[0]) }
     Box(Modifier.fillMaxSize().background(C.bg)) {
         Column(Modifier.fillMaxSize().padding(horizontal = 48.dp, vertical = 32.dp)) {
-            TopBar(t, t.locale, onLocale, onDiagnostics)
+            TopBar(t, t.locale, onLocale, onDiagnostics, onHistory = if (ui.state is State.Driving) null else onHistory)
             Spacer(Modifier.height(24.dp))
             when (val s = ui.state) {
                 State.Driving -> Driving(t, ui)
@@ -100,10 +101,18 @@ private fun UndoBar(t: ItemText, item: OpenItem, onUndo: () -> Unit, modifier: M
 }
 
 @Composable
-private fun TopBar(t: ItemText, locale: Locale, onLocale: (Locale) -> Unit, onDiagnostics: () -> Unit) {
+private fun TopBar(t: ItemText, locale: Locale, onLocale: (Locale) -> Unit, onDiagnostics: () -> Unit, onHistory: (() -> Unit)?) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(t.str(R.string.app_name), color = C.text, fontSize = 30.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.weight(1f))
+        // 이력은 주차 중에만 (주행 중 상세 화면 금지)
+        if (onHistory != null) {
+            Text(
+                t.str(R.string.history_button), color = C.text, fontSize = 18.sp, fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(end = 16.dp).clip(RoundedCornerShape(10.dp)).background(C.card)
+                    .clickable { onHistory() }.padding(horizontal = 18.dp, vertical = 10.dp),
+            )
+        }
         for (l in ItemText.SUPPORTED) {
             val selected = l.language == locale.language
             Text(

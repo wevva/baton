@@ -53,4 +53,13 @@
     <string name="energy_used">停车期间减少 %1$d%%</string>
     <string name="energy_same">停车期间无变化</string>
     <string name="voice_depart_safety">还有 %1$d 项安全事项未处理。</string>
+
+    <string name="history_button">记录</string>
+    <string name="history_title">交接记录</string>
+    <string name="history_empty">还没有交接记录。</string>
+    <string name="history_row">%1$s · 遗留 %2$d 项，已解决 %3$d 项</string>
+    <string name="history_received">%1$s 已接收</string>
+    <string name="history_not_received">未确认接收</string>
+    <string name="back">返回</string>
+    <string name="history_energy">电量 %1$d%% → %2$d%%</string>
 </resources>

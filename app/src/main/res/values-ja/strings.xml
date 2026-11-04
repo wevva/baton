@@ -53,4 +53,13 @@
     <string name="energy_used">駐車中に%1$d%%減りました</string>
     <string name="energy_same">駐車中の変化なし</string>
     <string name="voice_depart_safety">安全に関わる項目が%1$d件残っています。</string>
+
+    <string name="history_button">履歴</string>
+    <string name="history_title">引き継ぎ履歴</string>
+    <string name="history_empty">まだ引き継ぎ記録はありません。</string>
+    <string name="history_row">%1$s · 残した項目 %2$d件、解決 %3$d件</string>
+    <string name="history_received">%1$s 受け取り</string>
+    <string name="history_not_received">受け取り確認なし</string>
+    <string name="back">戻る</string>
+    <string name="history_energy">バッテリー %1$d%% → %2$d%%</string>
 </resources>
