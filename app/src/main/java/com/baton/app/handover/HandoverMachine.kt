@@ -52,7 +52,7 @@ class HandoverMachine(
     val history = mutableListOf<Handover>()
 
     private val driverSeat: Spot? =
-        profile.seats.firstOrNull { it == VehicleSnapshot.DRIVER_SEAT } ?: profile.seats.firstOrNull()
+        profile.seats.firstOrNull { it == profile.driverSeat } ?: profile.seats.firstOrNull()
 
     private var last: VehicleSnapshot? = null
     private var leftSince: Long? = null
@@ -145,7 +145,7 @@ class HandoverMachine(
     }
 
     companion object {
-        private val CAN_APPEAR_WHILE_PARKED = setOf(OpenItem.Type.LOW_BATTERY)
+        private val CAN_APPEAR_WHILE_PARKED = setOf(OpenItem.Type.LOW_BATTERY, OpenItem.Type.BRAKE_FLUID_LOW)
     }
 
     /** 운전석이 비었는지. 값을 모르면 '비었다'고 단정하지 않는다 */

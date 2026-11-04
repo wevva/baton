@@ -8,12 +8,14 @@ import ai.pleos.playground.vehicle.constant.area.DoorValue
 import ai.pleos.playground.vehicle.constant.area.SeatValue
 import ai.pleos.playground.vehicle.constant.area.WindowValue
 import ai.pleos.playground.vehicle.constant.control.LightState
+import ai.pleos.playground.vehicle.constant.control.OilLevelState
 import ai.pleos.playground.vehicle.constant.control.VehicleGear
 import ai.pleos.playground.vehicle.listener.DoorLockStateListener
 import ai.pleos.playground.vehicle.listener.DoorPositionListener
 import ai.pleos.playground.vehicle.listener.EvBatteryStateOfChargeListener
 import ai.pleos.playground.vehicle.listener.GearSelectionListener
 import ai.pleos.playground.vehicle.listener.LightStateListener
+import ai.pleos.playground.vehicle.listener.OilLevelStateListener
 import ai.pleos.playground.vehicle.listener.SeatOccupancyListener
 import ai.pleos.playground.vehicle.listener.WindowPositionListener
 import com.baton.app.security.BatonLog
@@ -113,6 +115,17 @@ class VehicleSignals(
             }
             vehicle.getLight().registerCabinLightState(l)
             cleanups += { vehicle.getLight().unregisterCabinLightState(l) }
+        }
+
+        if (profile.hasBrakeFluid) guard("brakeFluid") {
+            val l = object : OilLevelStateListener {
+                override fun onOilLevelUpdated(level: OilLevelState?) = set {
+                    it.copy(brakeFluidLow = level?.let { v -> v == OilLevelState.LOW || v == OilLevelState.CRITICALLY_LOW })
+                }
+                override fun onFailed(e: Exception) = warn("brakeFluid", e)
+            }
+            vehicle.getSafety().registerBrakeFluidLevelState(l)
+            cleanups += { vehicle.getSafety().unregisterBrakeFluidLevelState(l) }
         }
 
         if (profile.hasBatterySoc) guard("soc") {

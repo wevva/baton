@@ -62,4 +62,7 @@
     <string name="history_not_received">수령 확인 없음</string>
     <string name="back">돌아가기</string>
     <string name="history_energy">배터리 %1$d%% → %2$d%%</string>
+
+    <string name="item_brake_fluid_low">브레이크액이 부족해요 — 출발 전에 점검하세요</string>
+    <string name="done_brake_fluid_low">브레이크액 정상 확인</string>
 </resources>

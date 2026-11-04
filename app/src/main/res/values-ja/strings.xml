@@ -62,4 +62,7 @@
     <string name="history_not_received">受け取り確認なし</string>
     <string name="back">戻る</string>
     <string name="history_energy">バッテリー %1$d%% → %2$d%%</string>
+
+    <string name="item_brake_fluid_low">ブレーキ液が不足しています — 出発前に点検してください</string>
+    <string name="done_brake_fluid_low">ブレーキ液の正常を確認</string>
 </resources>

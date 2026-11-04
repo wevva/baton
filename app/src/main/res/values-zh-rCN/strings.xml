@@ -62,4 +62,7 @@
     <string name="history_not_received">未确认接收</string>
     <string name="back">返回</string>
     <string name="history_energy">电量 %1$d%% → %2$d%%</string>
+
+    <string name="item_brake_fluid_low">制动液不足 — 请在出发前检查</string>
+    <string name="done_brake_fluid_low">制动液已恢复正常</string>
 </resources>

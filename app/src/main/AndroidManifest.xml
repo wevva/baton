@@ -13,6 +13,8 @@
     <uses-permission android:name="pleos.car.permission.CAR_LIGHTS" />
     <uses-permission android:name="pleos.car.permission.CAR_SAFETY" />
     <uses-permission android:name="pleos.car.permission.CAR_SEATS" />
+    <!-- AAOS 표준: 운전석 위치(좌·우핸들) 읽기. protectionLevel=normal -->
+    <uses-permission android:name="android.car.permission.CAR_INFO" />
 
     <!-- 인터넷 불필요(음성은 온디바이스). 라이브러리가 넣더라도 최종 앱에서 제거 -->
     <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
@@ -32,6 +34,8 @@
         android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.NoActionBar">
+        <uses-library android:name="android.car" android:required="false" />
+
         <activity
             android:name=".MainActivity"
             android:configChanges="locale|layoutDirection"

@@ -343,6 +343,32 @@ class HandoverMachineTest {
         assertEquals("R3R", items.single().spot?.code)
     }
 
+    @Test fun `DT-09 브레이크액 부족은 안전 항목, 프로필에 없으면 무시`() {
+        val withBrake = sedan.copy(hasBrakeFluid = true)
+        val s = VehicleSnapshot(brakeFluidLow = true, timestampMs = 0)
+        assertEquals(OpenItem.Tier.SAFETY, Detector().detect(withBrake, s).single().type.tier)
+        assertTrue(Detector().detect(sedan, s).isEmpty())
+    }
+
+    @Test fun `SM-25 주차 중 브레이크액 경고가 생기면 다음 운전자에게 넘긴다`() {
+        val m = HandoverMachine(sedan.copy(hasBrakeFluid = true))
+        leave(m, locked = true, rearWindow = 0, cabin = false)
+        val a = m.onSnapshot(snap(10_000, driverSeated = false).copy(brakeFluidLow = true)) as State.Away
+        assertEquals(Type.BRAKE_FLUID_LOW, a.handover.open.single().type)
+    }
+
+    @Test fun `SM-16 우핸들 차량(일본·영국)은 1열 오른쪽을 운전석으로 본다`() {
+        val rhd = sedan.copy(driverSeat = passenger)
+        val m = HandoverMachine(rhd)
+        m.onSnapshot(snap(0, gear = Gear.DRIVE, passengerSeated = true))
+        // 1열 왼쪽(우핸들의 조수석)이 비어도 하차 아님
+        m.onSnapshot(snap(100, driverSeated = false, passengerSeated = true))
+        assertEquals(State.Parked, m.onTick(5_000))
+        // 1열 오른쪽(운전석)이 비면 하차
+        m.onSnapshot(snap(6_000, driverSeated = false, passengerSeated = false))
+        assertTrue(m.onTick(8_500) is State.Away)
+    }
+
     // ── SP: 위치 코드 ─────────────────────────────────────────────
 
     @Test fun `SP-01 위치 코드는 왕복 변환된다`() {

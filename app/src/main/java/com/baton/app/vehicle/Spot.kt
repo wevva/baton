@@ -28,6 +28,9 @@ data class VehicleProfile(
     val hasCabinLight: Boolean = false,
     val hasBatterySoc: Boolean = false,
     val hasTrunk: Boolean = false,
+    val hasBrakeFluid: Boolean = false,
+    /** 운전석 위치. 좌핸들 1열 왼쪽, 우핸들 1열 오른쪽 */
+    val driverSeat: Spot = Spot(1, Spot.Side.LEFT),
 ) {
     val rows: Int get() = (seats.map { it.row } + doors.map { it.row }).maxOrNull() ?: 0
     val seatCount: Int get() = seats.size

@@ -18,6 +18,8 @@ data class OpenItem(
         DOORS_UNLOCKED(Tier.SAFETY),
         DOOR_OPEN(Tier.SAFETY),
         TRUNK_OPEN(Tier.SAFETY),
+        /** 브레이크액 부족/위험 — 제동 계통 이상은 다음 운전자가 출발 전에 알아야 한다 */
+        BRAKE_FLUID_LOW(Tier.SAFETY),
         WINDOW_OPEN(Tier.TODO),
         CABIN_LIGHT_ON(Tier.TODO),
         LOW_BATTERY(Tier.TODO),

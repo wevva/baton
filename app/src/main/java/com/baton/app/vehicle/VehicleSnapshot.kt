@@ -10,6 +10,8 @@ data class VehicleSnapshot(
     val seatOccupied: Map<Spot, Boolean> = emptyMap(),
     val cabinLightOn: Boolean? = null,
     val batterySoc: Int? = null,
+    /** 브레이크액 부족(LOW·CRITICALLY_LOW)이면 true, 정상이면 false, 모르면 null */
+    val brakeFluidLow: Boolean? = null,
     val timestampMs: Long = 0L,
 ) {
     enum class Gear { PARK, REVERSE, NEUTRAL, DRIVE, UNKNOWN }

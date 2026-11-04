@@ -21,6 +21,7 @@ class Detector(
             if (s.doorOpen[door] == true) items += OpenItem(OpenItem.Type.DOOR_OPEN, door)
         }
         if (profile.hasTrunk && s.trunkOpen == true) items += OpenItem(OpenItem.Type.TRUNK_OPEN)
+        if (profile.hasBrakeFluid && s.brakeFluidLow == true) items += OpenItem(OpenItem.Type.BRAKE_FLUID_LOW)
         for ((spot, max) in profile.windows) {
             val pos = s.windowPos[spot] ?: continue
             if (max > 0 && pos.toDouble() / max >= windowOpenRatio) {
@@ -46,5 +47,6 @@ class Detector(
         OpenItem.Type.WINDOW_OPEN -> item.spot != null && s.windowPos[item.spot] != null
         OpenItem.Type.CABIN_LIGHT_ON -> s.cabinLightOn != null
         OpenItem.Type.LOW_BATTERY -> s.batterySoc != null
+        OpenItem.Type.BRAKE_FLUID_LOW -> s.brakeFluidLow != null
     }
 }

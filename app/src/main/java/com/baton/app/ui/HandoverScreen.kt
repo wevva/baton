@@ -61,7 +61,7 @@ fun HandoverScreen(
     // 화면 언어 = 현재 앱 설정 언어 (LocalConfiguration이 바뀌면 다시 그림)
     val config = LocalConfiguration.current
     val ctx = LocalContext.current
-    val t = remember(config) { ItemText(ctx, config.locales[0]) }
+    val t = remember(config, ui.profile.driverSeat) { ItemText(ctx, config.locales[0], ui.profile.driverSeat) }
     Box(Modifier.fillMaxSize().background(C.bg)) {
         Column(Modifier.fillMaxSize().padding(horizontal = 48.dp, vertical = 32.dp)) {
             TopBar(t, t.locale, onLocale, onDiagnostics, onHistory = if (ui.state is State.Driving) null else onHistory)

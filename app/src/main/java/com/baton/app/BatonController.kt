@@ -58,7 +58,7 @@ class BatonController(
 
     fun start() = scope.launch {
         delay(500) // SDK 서비스 연결 대기
-        val profile = ProfileDiscovery(vehicle).discover().profile
+        val profile = ProfileDiscovery(vehicle, context).discover().profile
         val m = HandoverMachine(profile, detector).also { machine = it }
         store.load()?.let { (saved, history) ->
             m.restore(saved, history)

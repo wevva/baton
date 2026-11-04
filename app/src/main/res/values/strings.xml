@@ -63,4 +63,7 @@
     <string name="history_not_received">Not received</string>
     <string name="back">Back</string>
     <string name="history_energy">Battery %1$d%% → %2$d%%</string>
+
+    <string name="item_brake_fluid_low">Brake fluid is low — check before driving</string>
+    <string name="done_brake_fluid_low">Brake fluid OK</string>
 </resources>

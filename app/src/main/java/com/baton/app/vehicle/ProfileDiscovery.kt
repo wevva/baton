@@ -13,7 +13,7 @@ import kotlin.coroutines.resume
  * 차종·연식·옵션표 없이, 차량에게 "무엇을 갖고 있는지" 직접 물어서 VehicleProfile을 만든다.
  * 같은 모델이라도 옵션(선루프, 3열 시트 등)이 다르면 SDK 기능 확인 결과가 달라지므로 그대로 반영된다.
  */
-class ProfileDiscovery(private val vehicle: Vehicle) {
+class ProfileDiscovery(private val vehicle: Vehicle, private val context: android.content.Context) {
 
     data class Result(
         val profile: VehicleProfile,
@@ -33,6 +33,9 @@ class ProfileDiscovery(private val vehicle: Vehicle) {
         }
         val soc = ask("batterySoc", ::note) { ok, fail -> vehicle.getEvBattery().checkEvBatteryStateOfChargeCapabilities(ok, fail) }
         // 차대번호(VIN)는 개인정보와 연결될 수 있어 읽지 않는다 (기능 판단에 불필요)
+        val brake = ask("brakeFluid", ::note) { ok, fail ->
+            vehicle.getSafety().checkBrakeFluidLevelStateCapabilities({ cfg, _ -> ok(cfg) }, fail)
+        }
         // getCapabilityInfo는 PRIVATE 권한 필요(서드파티 불가) → 기능별 확인 API로 대신함
 
         val doorSpots = doorPos?.keys?.flatMap { area -> area.values.mapNotNull { doorSpot(it) } }?.distinct().orEmpty()
@@ -50,10 +53,12 @@ class ProfileDiscovery(private val vehicle: Vehicle) {
             hasCabinLight = cabin != null,
             hasBatterySoc = soc != null,
             hasTrunk = hasTrunk,
+            hasBrakeFluid = brake != null,
+            driverSeat = DriverSeat.resolve(context),
         )
         note("PROFILE rows=${profile.rows} seats=${profile.seatCount} doors=${profile.doors.map { it.code }} " +
             "windows=${profile.windows.mapKeys { it.key.code }} lock=${profile.hasDoorLock} trunk=${profile.hasTrunk} " +
-            "cabin=${profile.hasCabinLight} soc=${profile.hasBatterySoc}")
+            "cabin=${profile.hasCabinLight} soc=${profile.hasBatterySoc} driver=${profile.driverSeat.code}")
         return Result(profile, log)
     }
 

@@ -9,6 +9,8 @@ plugins {
 android {
     namespace = "com.baton.app"
     compileSdk = 35
+    // AAOS 표준 차량 API (운전석 위치 INFO_DRIVER_SEAT). 기기에 내장된 라이브러리를 쓴다
+    useLibrary("android.car")
 
     defaultConfig {
         applicationId = "com.baton.app"
