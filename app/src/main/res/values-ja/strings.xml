@@ -46,4 +46,11 @@
     <string name="hint_tap_to_ack">項目をタップすると確認済みになります</string>
     <string name="acknowledged">確認済み: %1$s</string>
     <string name="undo">元に戻す</string>
+
+    <string name="receive_button">受け取りました</string>
+    <string name="received_at">%1$s 受け取り確認</string>
+    <string name="energy_charged">駐車中に%1$d%%充電されました</string>
+    <string name="energy_used">駐車中に%1$d%%減りました</string>
+    <string name="energy_same">駐車中の変化なし</string>
+    <string name="voice_depart_safety">安全に関わる項目が%1$d件残っています。</string>
 </resources>

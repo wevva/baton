@@ -47,4 +47,11 @@
     <string name="hint_tap_to_ack">Tap an item to mark it as checked</string>
     <string name="acknowledged">Checked: %1$s</string>
     <string name="undo">Undo</string>
+
+    <string name="receive_button">Got it</string>
+    <string name="received_at">Received at %1$s</string>
+    <string name="energy_charged">+%1$d%% charged while parked</string>
+    <string name="energy_used">%1$d%% used while parked</string>
+    <string name="energy_same">No change while parked</string>
+    <string name="voice_depart_safety">%1$d safety items still open.</string>
 </resources>

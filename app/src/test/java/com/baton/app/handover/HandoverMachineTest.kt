@@ -119,6 +119,19 @@ class HandoverMachineTest {
         assertEquals(1, m.history.size)
     }
 
+    @Test fun 수령증은_탑승_상태에서_한번만_기록된다() {
+        val m = HandoverMachine(sedan)
+        m.onSnapshot(snap(seated = true))
+        m.onSnapshot(snap(seated = false))
+        m.onSnapshot(snap(seated = true))
+        m.receive(500)
+        val s = m.receive(900) as State.Boarded
+        assertEquals(500L, s.handover.receivedAtMs)
+        // 이후 신호 갱신에도 수령 기록은 유지
+        val after = m.onSnapshot(snap(seated = true, cabin = true)) as State.Boarded
+        assertEquals(500L, after.handover.receivedAtMs)
+    }
+
     @Test fun 위치코드는_왕복_변환된다() {
         assertEquals(Spot(3, Side.CENTER), Spot.fromCode("R3C"))
     }

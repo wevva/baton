@@ -46,4 +46,11 @@
     <string name="hint_tap_to_ack">点击事项即可标记为已确认</string>
     <string name="acknowledged">已确认：%1$s</string>
     <string name="undo">撤销</string>
+
+    <string name="receive_button">已接收</string>
+    <string name="received_at">%1$s 已确认接收</string>
+    <string name="energy_charged">停车期间充电 %1$d%%</string>
+    <string name="energy_used">停车期间减少 %1$d%%</string>
+    <string name="energy_same">停车期间无变化</string>
+    <string name="voice_depart_safety">还有 %1$d 项安全事项未处理。</string>
 </resources>

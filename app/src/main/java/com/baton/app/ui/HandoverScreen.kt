@@ -55,6 +55,7 @@ fun HandoverScreen(
     onDiagnostics: () -> Unit,
     onAcknowledge: (OpenItem) -> Unit = {},
     onUndo: () -> Unit = {},
+    onReceive: () -> Unit = {},
 ) {
     // 화면 언어 = 현재 앱 설정 언어 (LocalConfiguration이 바뀌면 다시 그림)
     val config = LocalConfiguration.current
@@ -67,8 +68,8 @@ fun HandoverScreen(
             when (val s = ui.state) {
                 State.Driving -> Driving(t, ui)
                 State.Parked -> Parked(t, ui.preview)
-                is State.Away -> Handover(t, t.str(R.string.state_away), s.handover, ui, showEnergy = false, onAcknowledge = null)
-                is State.Boarded -> Handover(t, t.str(R.string.state_boarded), s.handover, ui, showEnergy = true, onAcknowledge = onAcknowledge)
+                is State.Away -> Handover(t, t.str(R.string.state_away), s.handover, ui, showEnergy = false, onAcknowledge = null, onReceive = null)
+                is State.Boarded -> Handover(t, t.str(R.string.state_boarded), s.handover, ui, showEnergy = true, onAcknowledge = onAcknowledge, onReceive = onReceive)
             }
         }
         val undoable = ui.undoable
@@ -153,6 +154,7 @@ private fun Handover(
     ui: UiState,
     showEnergy: Boolean,
     onAcknowledge: ((OpenItem) -> Unit)?,
+    onReceive: (() -> Unit)?,
 ) {
     val open = h.open.filter { it.key !in ui.acknowledged }
     Row(Modifier.fillMaxSize()) {
@@ -163,6 +165,33 @@ private fun Handover(
             val socNow = ui.snapshot.batterySoc
             if (showEnergy && socPark != null && socNow != null) {
                 Text(t.str(R.string.energy_line, socPark, socNow), color = C.sub, fontSize = 24.sp)
+                // 주차 중 변화 = 탑승 시점 잔량 - 주차 시점 잔량
+                val delta = (h.socAtBoard ?: socNow) - socPark
+                Text(
+                    when {
+                        delta >= 2 -> t.str(R.string.energy_charged, delta)
+                        delta <= -2 -> t.str(R.string.energy_used, -delta)
+                        else -> t.str(R.string.energy_same)
+                    },
+                    color = if (delta >= 2) C.done else C.sub, fontSize = 22.sp,
+                )
+            }
+            if (onReceive != null) {
+                Spacer(Modifier.height(24.dp))
+                val at = h.receivedAtMs
+                if (at == null) {
+                    Text(
+                        t.str(R.string.receive_button), color = C.bg, fontSize = 28.sp, fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(C.done)
+                            .clickable { onReceive() }
+                            .padding(horizontal = 40.dp, vertical = 20.dp),
+                    )
+                } else {
+                    val time = java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT, t.locale).format(java.util.Date(at))
+                    Text("✓ " + t.str(R.string.received_at, time), color = C.done, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
+                }
             }
             Spacer(Modifier.height(24.dp))
             when {

@@ -49,6 +49,7 @@ class HandoverStore(context: Context, private val maxHistory: Int = 50) {
         .put("parkedAt", h.parkedAtMs)
         .putOpt("socAtPark", h.socAtPark)
         .putOpt("socAtBoard", h.socAtBoard)
+        .putOpt("receivedAt", h.receivedAtMs)
         .put("open", JSONArray(h.open.map { enc(it) }))
         .put("resolved", JSONArray(h.resolved.map { JSONObject().put("item", enc(it.item)).put("at", it.atMs) }))
 
@@ -58,6 +59,7 @@ class HandoverStore(context: Context, private val maxHistory: Int = 50) {
         parkedAtMs = o.getLong("parkedAt"),
         socAtPark = o.optIntOrNull("socAtPark"),
         socAtBoard = o.optIntOrNull("socAtBoard"),
+        receivedAtMs = if (o.has("receivedAt") && !o.isNull("receivedAt")) o.getLong("receivedAt") else null,
         open = o.getJSONArray("open").let { a -> (0 until a.length()).mapNotNull { decItem(a.getJSONObject(it)) } },
         resolved = o.getJSONArray("resolved").let { a ->
             (0 until a.length()).mapNotNull { i ->

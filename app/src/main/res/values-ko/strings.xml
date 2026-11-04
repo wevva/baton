@@ -46,4 +46,11 @@
     <string name="hint_tap_to_ack">항목을 누르면 확인 처리돼요</string>
     <string name="acknowledged">확인함: %1$s</string>
     <string name="undo">되돌리기</string>
+
+    <string name="receive_button">받았어요</string>
+    <string name="received_at">%1$s 수령 확인</string>
+    <string name="energy_charged">주차 중 %1$d%% 충전됨</string>
+    <string name="energy_used">주차 중 %1$d%% 줄어듦</string>
+    <string name="energy_same">주차 중 변화 없음</string>
+    <string name="voice_depart_safety">안전 항목이 %1$d건 남아 있어요.</string>
 </resources>

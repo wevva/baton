@@ -69,6 +69,7 @@ class MainActivity : ComponentActivity() {
                         onDiagnostics = { diagnostics = true },
                         onAcknowledge = controller::acknowledge,
                         onUndo = controller::undo,
+                        onReceive = controller::receive,
                     )
                 }
             }

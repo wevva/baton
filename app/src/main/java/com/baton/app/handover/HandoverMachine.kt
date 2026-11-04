@@ -31,6 +31,8 @@ class HandoverMachine(
         val open: List<OpenItem>,
         val resolved: List<Resolved> = emptyList(),
         val socAtBoard: Int? = null,
+        /** 다음 운전자가 '받았어요'를 누른 시각 (바통 수령증) */
+        val receivedAtMs: Long? = null,
     ) {
         val allClear: Boolean get() = open.isEmpty()
     }
@@ -70,6 +72,15 @@ class HandoverMachine(
                     State.Boarded(h)
                 }
             }
+        }
+        return state
+    }
+
+    /** 바통 수령증: 탑승한 운전자가 인계를 받았음을 1탭으로 기록 */
+    fun receive(atMs: Long): State {
+        val cur = state
+        if (cur is State.Boarded && cur.handover.receivedAtMs == null) {
+            state = State.Boarded(cur.handover.copy(receivedAtMs = atMs))
         }
         return state
     }

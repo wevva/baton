@@ -98,6 +98,14 @@ class BatonController(
         _ui.value = _ui.value.copy(acknowledged = _ui.value.acknowledged - item.key, undoable = null)
     }
 
+    /** 바통 수령증 1탭 */
+    fun receive() {
+        val m = machine ?: return
+        val after = m.receive(System.currentTimeMillis())
+        _ui.value = _ui.value.copy(state = after)
+        store.save(after, m.history)
+    }
+
     fun setLocale(locale: Locale) {
         _ui.value = _ui.value.copy(locale = locale)
     }
@@ -112,6 +120,17 @@ class BatonController(
             else text.str(R.string.voice_intro, h.open.size) + " " + h.open.joinToString(". ") { text.item(it) }
             Log.i(TAG, "안내: $msg")
             speaker.say(msg, locale)
+        }
+        // 출발 순간(D단 진입) 확인 안 된 안전 항목이 남아 있으면 한 번만 알림
+        if (before is State.Boarded && after is State.Driving) {
+            val safety = before.handover.open.filter {
+                it.type.tier == OpenItem.Tier.SAFETY && it.key !in _ui.value.acknowledged
+            }
+            if (safety.isNotEmpty()) {
+                val msg = text.str(R.string.voice_depart_safety, safety.size) + " " + safety.joinToString(". ") { text.item(it) }
+                Log.i(TAG, "안내: $msg")
+                speaker.say(msg, locale)
+            }
         }
         if (before is State.Boarded && after is State.Boarded) {
             val newly = after.handover.resolved.size - before.handover.resolved.size
