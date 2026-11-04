@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 바통 앱 아이콘 (직접 제작): 비스듬한 이어달리기 바통 + 넘겨주는 곡선 화살표 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 넘겨주는 곡선 화살표 -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#4CC38A"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:pathData="M34,70 C30,52 40,36 58,33" />
+    <path
+        android:fillColor="#4CC38A"
+        android:pathData="M56,25 L68,33 L56,41 Z" />
+    <!-- 바통 몸통 (45도 기울어진 캡슐) -->
+    <group
+        android:pivotX="58"
+        android:pivotY="60"
+        android:rotation="-45">
+        <path
+            android:fillColor="#F2F4F7"
+            android:pathData="M40,53 L76,53 A7,7 0 0 1 76,67 L40,67 A7,7 0 0 1 40,53 Z" />
+        <path
+            android:fillColor="#F2B84B"
+            android:pathData="M54,53 L62,53 L62,67 L54,67 Z" />
+    </group>
+</vector>
