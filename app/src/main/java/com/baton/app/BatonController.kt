@@ -114,7 +114,8 @@ class BatonController(
             snapshot = snap,
             state = after,
             history = m.history.reversed(),
-            preview = if (after is State.Parked) detector.detect(profile, snap) else emptyList(),
+            // 주차 중 미리보기: 앉아 있을 때 정상인 '잠금 해제·문 열림'은 빼고 보여 준다
+            preview = if (after is State.Parked) detector.detect(profile, snap).filter { it.type !in PREVIEW_HIDDEN } else emptyList(),
             undoable = if (after is State.Boarded) _ui.value.undoable else null,
         )
         if (before::class != after::class) {
@@ -197,5 +198,6 @@ class BatonController(
         /** 되돌리기 가능 시간. 차 안에서는 손이 늦을 수 있어 일반 앱(약 5초)보다 길게 */
         const val UNDO_WINDOW_MS = 8_000L
         private const val MAX_DISCOVERY_TRIES = 30
+        private val PREVIEW_HIDDEN = setOf(OpenItem.Type.DOORS_UNLOCKED, OpenItem.Type.DOOR_OPEN)
     }
 }

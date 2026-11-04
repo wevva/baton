@@ -12,7 +12,11 @@ import com.baton.app.vehicle.VehicleSnapshot.Gear
  *                                                          ▲                         │
  *                                                          └──(운전석 다시 비움)──────┘
  *
- * - 하차 순간 미해결 항목을 기록하고, 이후 신호가 정상이 되면 그 항목을 스스로 지운다.
+ * - 인계하는 것은 '차를 떠날 때의 마지막 상태'다.
+ *   · 창문·트렁크·배터리·브레이크액: 운전자가 내리는 순간 확정
+ *   · 문 잠금 해제·실내등: 모든 문이 닫힌 뒤 [settleMs] 동안 그대로일 때만 확정 (내린 뒤 잠그고 자동 소등되는 정상 흐름 제외)
+ *   · 문 열림: [settleMs] 넘게 계속 열려 있을 때만 확정
+ *   이후 신호가 정상이 되면 그 항목을 스스로 지운다.
  * - 운전자 신원(얼굴·목소리)은 쓰지 않는다. 운전석 착석·기어 신호만 쓴다.
  *   (동승자가 남아 있어도 운전자가 바뀌면 인계한다: 휴게소 운전 교대)
  * - 착석 센서가 없는 차는 'P단 + 도어 잠김'을 하차로, '잠금 해제'를 탑승으로 본다.
@@ -22,6 +26,8 @@ class HandoverMachine(
     private val detector: Detector = Detector(),
     /** 운전석이 이 시간 이상 계속 비어야 하차로 본다 (몸을 들썩이는 센서 흔들림 방지) */
     private val leaveDebounceMs: Long = 2_000,
+    /** 하차 동작에 따른 일시 상태를 '남겨진 일'로 확정하기까지 기다리는 시간 */
+    private val settleMs: Long = 20_000,
     private val maxHistory: Int = 50,
 ) {
     sealed interface State {
@@ -61,6 +67,14 @@ class HandoverMachine(
     private var last: VehicleSnapshot? = null
     private var leftSince: Long? = null
 
+    // ── 하차 동작 때문에 잠시 생기는 상태(문 열림·잠금 해제·실내등)의 확정 대기 ──
+    /** 확정 대기 중인 일시 항목: 키 → (항목, 처음 본 시각) */
+    private val pending = LinkedHashMap<String, Pair<OpenItem, Long>>()
+    /** 모든 문이 닫힌 채로 유지되기 시작한 시각 */
+    private var quietSince: Long? = null
+    /** 확정 대기가 끝났는지. 끝난 뒤 생기는 일시 상태는 다음 운전자의 행동이므로 기록하지 않는다 */
+    private var settled = true
+
     fun onSnapshot(s: VehicleSnapshot): State {
         last = s
         val parked = s.gear == Gear.PARK
@@ -72,32 +86,88 @@ class HandoverMachine(
             State.Driving -> if (parked) State.Parked else cur
             State.Parked -> when {
                 !parked -> State.Driving
-                leftLongEnough -> State.Away(
-                    Handover(parkedAtMs = s.timestampMs, socAtPark = s.batterySoc, open = detector.detect(profile, s))
-                )
+                leftLongEnough -> {
+                    // 바로 확정되는 항목(창문·트렁크·배터리·브레이크액)만 기록하고,
+                    // 하차 동작에 따른 일시 상태(문 열림·잠금 해제·실내등)는 확정 대기로
+                    val detected = detector.detect(profile, s)
+                    beginSettling(detected.filter { it.type in TRANSIENT_AT_EXIT }, s)
+                    State.Away(settle(Handover(s.timestampMs, s.batterySoc, detected.filter { it.type !in TRANSIENT_AT_EXIT }), s))
+                }
                 else -> cur
             }
             is State.Away -> {
-                val h = refresh(cur.handover, s)
+                // 내린 뒤 앞사람이 스스로 해결한 것은 조용히 빠진다 (다음 사람의 '해결'로 치지 않음)
+                val h = settle(refresh(cur.handover, s, creditResolved = false), s)
                 when {
                     // 앱이 꺼져 있는 사이 누군가 이미 출발한 경우: 이력에 남기고 주행 상태로
                     !parked && s.gear != Gear.UNKNOWN -> { archive(h); State.Driving }
-                    driverBoarded(s) -> State.Boarded(h.copy(socAtBoard = s.batterySoc))
+                    driverBoarded(s) -> {
+                        // 확정 전에 다음 사람이 탐(빠른 교대): 확정 안 된 일시 상태는 교대 과정이므로 버린다
+                        endSettling()
+                        State.Boarded(h.copy(socAtBoard = s.batterySoc))
+                    }
                     else -> State.Away(h)
                 }
             }
             is State.Boarded -> {
-                val h = refresh(cur.handover, s)
+                val h = refresh(cur.handover, s, creditResolved = true)
                 when {
                     !parked && s.gear != Gear.UNKNOWN -> { archive(h); State.Driving }
-                    // 탔다가 출발하지 않고 다시 내림: 같은 인계를 유지한 채 대기로
-                    leftLongEnough -> State.Away(h)
+                    // 탔다가 출발하지 않고 다시 내림: 같은 인계를 유지한 채 대기로 (일시 상태는 다시 확정 대기)
+                    leftLongEnough -> {
+                        beginSettling(detector.detect(profile, s).filter { it.type in TRANSIENT_AT_EXIT && it.key !in h.open.map { o -> o.key } }, s)
+                        State.Away(h)
+                    }
                     else -> State.Boarded(h)
                 }
             }
         }
         return state
     }
+
+    private fun beginSettling(transient: List<OpenItem>, s: VehicleSnapshot) {
+        pending.clear()
+        transient.forEach { pending[it.key] = it to s.timestampMs }
+        quietSince = if (allDoorsClosed(s)) s.timestampMs else null
+        settled = false
+    }
+
+    private fun endSettling() {
+        pending.clear()
+        quietSince = null
+        settled = true
+    }
+
+    /**
+     * 일시 상태 확정:
+     * - 문 열림: 계속 [settleMs] 이상 열려 있으면 확정 (내리면서 잠깐 연 것은 제외)
+     * - 잠금 해제·실내등: 모든 문이 닫힌 뒤 [settleMs] 이상 그대로면 확정 (내린 뒤 잠그거나 자동 소등되는 정상 흐름 제외)
+     * 확정 전에 정상으로 돌아오면 버린다. 시스템이 그 전에 꺼지면 인계하지 않는다(오탐보다 미탐).
+     */
+    private fun settle(h: Handover, s: VehicleSnapshot): Handover {
+        if (settled) return h
+        val now = s.timestampMs
+        quietSince = if (allDoorsClosed(s)) (quietSince ?: now) else null
+        val transientNow = detector.detect(profile, s).filter { it.type in TRANSIENT_AT_EXIT }.associateBy { it.key }
+        // 정상으로 돌아온 것은 대기에서 제외 (값을 모르면 유지)
+        pending.keys.toList().forEach { k ->
+            val item = pending.getValue(k).first
+            if (k !in transientNow && detector.isKnown(item, s)) pending.remove(k)
+        }
+        // 대기 중에 새로 생긴 일시 상태도 추적 (예: 문이 닫힌 뒤에도 켜 둔 독서등)
+        transientNow.forEach { (k, item) -> if (k !in pending) pending[k] = item to now }
+        val quietLongEnough = quietSince?.let { now - it >= settleMs } == true
+        val confirmed = pending.values.filter { (item, since) ->
+            if (item.type == OpenItem.Type.DOOR_OPEN) now - since >= settleMs else quietLongEnough
+        }.map { (item, _) -> transientNow[item.key] ?: item }
+        confirmed.forEach { pending.remove(it.key) }
+        if (quietLongEnough && pending.isEmpty()) settled = true
+        if (confirmed.isEmpty()) return h
+        val open = (h.open + confirmed).distinctBy { it.key }.sortedBy { it.type.tier.ordinal }
+        return h.copy(open = open)
+    }
+
+    private fun allDoorsClosed(s: VehicleSnapshot) = profile.doors.all { s.doorOpen[it] != true }
 
     /** 신호 변화가 없어도 시간이 흐르면 판단해야 하는 경우(하차 2초 유지)를 위한 주기 호출 */
     fun onTick(nowMs: Long): State {
@@ -136,6 +206,7 @@ class HandoverMachine(
 
     /** 저장해 둔 상태로 복원 (앱 재시작·차량 전원 off 후) */
     fun restore(saved: State, savedHistory: List<Handover>) {
+        endSettling() // 재시작 전의 확정 대기는 알 수 없으므로 버린다 (보수적)
         state = saved
         history.clear()
         history += savedHistory.takeLast(maxHistory)
@@ -154,14 +225,15 @@ class HandoverMachine(
      * - 주차 중 저절로 생길 수 있는 항목(배터리 부족)만 새로 추가한다
      * - 같은 항목의 해결 기록은 최신 1건만 둔다
      */
-    private fun refresh(h: Handover, s: VehicleSnapshot): Handover {
+    private fun refresh(h: Handover, s: VehicleSnapshot, creditResolved: Boolean): Handover {
         val detected = detector.detect(profile, s).associateBy { it.key }
         val recordedKeys = h.open.map { it.key }.toSet()
         // 감지되면 최신 값으로, 신호 값을 아직 모르면 기록 그대로 유지 (모름 ≠ 해결)
         val stillOpen = h.open.mapNotNull { detected[it.key] ?: it.takeUnless { _ -> detector.isKnown(it, s) } }
         val appeared = detected.values.filter { it.key !in recordedKeys && it.type in CAN_APPEAR_WHILE_PARKED }
         val open = (stillOpen + appeared).sortedBy { it.type.tier.ordinal }
-        val newlyResolved = h.open.filter { it.key !in detected && detector.isKnown(it, s) }.map { Resolved(it, s.timestampMs) }
+        val newlyResolved = if (!creditResolved) emptyList()
+            else h.open.filter { it.key !in detected && detector.isKnown(it, s) }.map { Resolved(it, s.timestampMs) }
         val openKeys = open.map { it.key }.toSet()
         val newKeys = newlyResolved.map { it.item.key }.toSet()
         val resolved = h.resolved.filter { it.item.key !in newKeys && it.item.key !in openKeys } + newlyResolved
@@ -171,6 +243,9 @@ class HandoverMachine(
 
     companion object {
         fun canAcknowledge(item: OpenItem) = item.type.tier != OpenItem.Tier.SAFETY
+
+        /** 하차 동작 때문에 잠시 생기는 상태 — 바로 인계하지 않고 확정을 기다린다 */
+        val TRANSIENT_AT_EXIT = setOf(OpenItem.Type.DOORS_UNLOCKED, OpenItem.Type.DOOR_OPEN, OpenItem.Type.CABIN_LIGHT_ON)
 
         private val CAN_APPEAR_WHILE_PARKED = setOf(OpenItem.Type.LOW_BATTERY, OpenItem.Type.BRAKE_FLUID_LOW)
     }

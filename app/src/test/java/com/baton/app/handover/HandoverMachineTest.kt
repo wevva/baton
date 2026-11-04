@@ -45,13 +45,97 @@ class HandoverMachineTest {
         cabinLightOn = cabin, batterySoc = soc, timestampMs = t,
     )
 
-    /** 주행 → 주차 → (문제 남기고) 하차 2초 유지 → Away 까지 진행 */
-    private fun leave(m: HandoverMachine, t0: Long = 0, locked: Boolean = false, rearWindow: Int = 4, cabin: Boolean = true, soc: Int = 62): State.Away {
+    /**
+     * 주행 → 주차 → (문제 남기고) 하차 2초 유지 → Away → (settle=true면) 문 닫힌 채 20초 경과해 일시 상태까지 확정
+     */
+    private fun leave(
+        m: HandoverMachine, t0: Long = 0, locked: Boolean = false, rearWindow: Int = 4, cabin: Boolean = true,
+        soc: Int = 62, settle: Boolean = true,
+    ): State.Away {
         m.onSnapshot(snap(t0, gear = Gear.DRIVE))
         m.onSnapshot(snap(t0 + 100))
         m.onSnapshot(snap(t0 + 200, locked = locked, rearWindow = rearWindow, cabin = cabin, soc = soc))
         m.onSnapshot(snap(t0 + 300, driverSeated = false, locked = locked, rearWindow = rearWindow, cabin = cabin, soc = soc))
-        return m.onTick(t0 + 2_400) as State.Away
+        val away = m.onTick(t0 + 2_400) as State.Away
+        return if (settle) m.onTick(t0 + 2_400 + SETTLE) as State.Away else away
+    }
+
+    private val SETTLE = 20_000L
+
+    // ── EX: 실제 하차 순서 (차를 떠날 때의 마지막 상태만 인계) ─────────────
+
+    @Test fun `EX-01 정상 하차 - 내릴 땐 잠금 해제·실내등 켜짐, 내린 뒤 잠그고 자동 소등 → 인계 없음`() {
+        val m = HandoverMachine(sedan)
+        m.onSnapshot(snap(0, gear = Gear.DRIVE))
+        m.onSnapshot(snap(100))
+        // 시동 끄고 문 열고 내림: 잠금 해제·실내등 켜짐·운전석 문 열림
+        m.onSnapshot(snap(200, driverSeated = false, locked = false, cabin = true, driverDoorOpen = true))
+        val a0 = m.onTick(2_300) as State.Away
+        assertTrue("내리는 순간에는 일시 상태를 기록하지 않음", a0.handover.open.isEmpty())
+        m.onSnapshot(snap(4_000, driverSeated = false, locked = false, cabin = true)) // 문 닫음
+        m.onSnapshot(snap(6_000, driverSeated = false, locked = true, cabin = true))  // 리모컨으로 잠금
+        m.onSnapshot(snap(15_000, driverSeated = false, locked = true, cabin = false)) // 자동 소등
+        val a = m.onTick(60_000) as State.Away
+        assertTrue(a.handover.open.isEmpty())
+        assertTrue("앞사람이 스스로 한 것은 '해결됨'으로 치지 않음", a.handover.resolved.isEmpty())
+    }
+
+    @Test fun `EX-02 문을 안 잠그고 떠남 - 문 닫힌 뒤 20초 지나면 '문 안 잠김' 확정`() {
+        val m = HandoverMachine(sedan)
+        m.onSnapshot(snap(0, gear = Gear.DRIVE)); m.onSnapshot(snap(100))
+        m.onSnapshot(snap(200, driverSeated = false, locked = false, driverDoorOpen = true))
+        m.onSnapshot(snap(3_000, driverSeated = false, locked = false)) // 문 닫음, 잠그지 않음
+        assertTrue((m.onTick(22_000) as State.Away).handover.open.isEmpty()) // 아직 19초
+        assertEquals(listOf(Type.DOORS_UNLOCKED), (m.onTick(23_100) as State.Away).handover.open.map { it.type })
+    }
+
+    @Test fun `EX-03 실내등을 켠 채 떠남 - 자동 소등 시간 지나도 켜져 있으면 확정`() {
+        val m = HandoverMachine(sedan)
+        m.onSnapshot(snap(0, gear = Gear.DRIVE)); m.onSnapshot(snap(100))
+        m.onSnapshot(snap(200, driverSeated = false, cabin = true))
+        m.onTick(2_300) // 하차 확정
+        assertEquals(listOf(Type.CABIN_LIGHT_ON), (m.onTick(25_000) as State.Away).handover.open.map { it.type })
+    }
+
+    @Test fun `EX-04 문을 연 채 떠남 - 20초 넘게 열려 있으면 '문 열림' 확정, 잠깐 연 것은 제외`() {
+        val m = HandoverMachine(sedan)
+        m.onSnapshot(snap(0, gear = Gear.DRIVE)); m.onSnapshot(snap(100))
+        m.onSnapshot(snap(200, driverSeated = false, driverDoorOpen = true))
+        m.onTick(2_300) // 하차 확정
+        m.onTick(10_000)
+        assertTrue((m.state as State.Away).handover.open.none { it.type == Type.DOOR_OPEN })
+        assertTrue((m.onTick(23_000) as State.Away).handover.open.any { it.type == Type.DOOR_OPEN })
+    }
+
+    @Test fun `EX-05 빠른 운전 교대(확정 전 탑승) - 교대 과정의 잠금 해제·문 열림은 인계하지 않음`() {
+        val m = HandoverMachine(sedan)
+        m.onSnapshot(snap(0, gear = Gear.DRIVE)); m.onSnapshot(snap(100))
+        m.onSnapshot(snap(200, driverSeated = false, locked = false, driverDoorOpen = true, rearWindow = 4))
+        m.onTick(2_300)
+        val b = m.onSnapshot(snap(8_000, locked = false, driverDoorOpen = true, rearWindow = 4)) as State.Boarded
+        assertEquals("창문(바로 확정 항목)만 인계", listOf(Type.WINDOW_OPEN), b.handover.open.map { it.type })
+    }
+
+    @Test fun `EX-06 창문은 내리는 순간 바로 인계된다`() {
+        val a = leave(HandoverMachine(sedan), locked = true, cabin = false, rearWindow = 4, settle = false)
+        assertEquals(listOf(Type.WINDOW_OPEN), a.handover.open.map { it.type })
+    }
+
+    @Test fun `EX-07 내린 뒤 앞사람이 창문을 닫으면 조용히 빠지고 '해결됨'으로 치지 않는다`() {
+        val m = HandoverMachine(sedan)
+        leave(m, locked = true, cabin = false, rearWindow = 4, settle = false)
+        val a = m.onSnapshot(snap(5_000, driverSeated = false, rearWindow = 0)) as State.Away
+        assertTrue(a.handover.open.isEmpty())
+        assertTrue(a.handover.resolved.isEmpty())
+    }
+
+    @Test fun `EX-08 시스템 재시작 후 복원된 인계에는 다음 사람의 잠금 해제를 더하지 않는다`() {
+        val m = HandoverMachine(sedan)
+        m.restore(State.Away(HandoverMachine.Handover(1, 60, emptyList())), emptyList())
+        val a = m.onSnapshot(snap(10, driverSeated = false, locked = false, driverDoorOpen = true)) as State.Away
+        m.onTick(60_000)
+        assertTrue((m.state as State.Away).handover.open.isEmpty())
+        assertTrue(a.handover.open.isEmpty())
     }
 
     private fun boardSame(m: HandoverMachine, t: Long) =
