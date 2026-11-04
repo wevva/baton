@@ -66,6 +66,7 @@ class HandoverMachine(
     // ── 운행 기록: 이번 운행 중 켜졌던 고장 경고등과 횟수 ──
     private val tripWarnings = LinkedHashMap<String, Int>()
     private var lampsBefore: Set<String> = emptySet()
+    private var countsBefore: Map<String, Int> = emptyMap()
 
     fun onSnapshot(s: VehicleSnapshot): State {
         last = s
@@ -115,12 +116,19 @@ class HandoverMachine(
     private fun recordTrip(s: VehicleSnapshot) {
         val lamps = s.telltalesOn ?: return
         val counting = state == State.Driving || state == State.Parked
+        // 누적 횟수가 있으면 그 증가분으로 센다 (중간값을 건너뛰어도 빠지지 않음). 없으면 켜짐 집합의 변화로 센다
+        val newly: Map<String, Int> = if (s.lampOnCounts.isNotEmpty()) {
+            s.lampOnCounts.mapValues { (n, c) -> c - (countsBefore[n] ?: 0) }.filterValues { it > 0 }
+        } else {
+            (lamps - lampsBefore).associateWith { 1 }
+        }
         if (counting && profile.hasTelltales) {
-            for (name in lamps - lampsBefore) {
-                if (Telltales.spec(name)?.kind == Telltales.Kind.FAULT) tripWarnings[name] = (tripWarnings[name] ?: 0) + 1
+            for ((name, d) in newly) {
+                if (Telltales.spec(name)?.kind == Telltales.Kind.FAULT) tripWarnings[name] = (tripWarnings[name] ?: 0) + d
             }
         }
         lampsBefore = lamps
+        if (s.lampOnCounts.isNotEmpty()) countsBefore = s.lampOnCounts
     }
 
     /** 차를 떠나는 순간 넘길 항목: 지금 상태 + 이번 운행 중 켜졌다 꺼진 경고 */

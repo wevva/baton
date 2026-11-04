@@ -37,6 +37,23 @@ class VehicleSignals(
 
     private val cleanups = mutableListOf<() -> Unit>()
 
+    /** 경고등 켜짐 누적 집계 (콜백 스레드에서 호출되므로 동기화) */
+    private val lampLock = Any()
+    private var lampsPrev: Set<String> = emptySet()
+
+    private fun onLamps(info: Telltales?) {
+        val now = lampsOn(info)
+        synchronized(lampLock) {
+            val newlyOn = now - lampsPrev
+            lampsPrev = now
+            set { s ->
+                val counts = s.lampOnCounts.toMutableMap()
+                for (n in newlyOn) counts[n] = (counts[n] ?: 0) + 1
+                s.copy(telltalesOn = now, lampOnCounts = counts)
+            }
+        }
+    }
+
     private fun set(change: (VehicleSnapshot) -> VehicleSnapshot) =
         _snapshot.update { change(it).copy(timestampMs = clock()) }
 
@@ -110,13 +127,13 @@ class VehicleSignals(
         }
         if (profile.hasTelltales) guard("telltales") {
             val l = object : TelltaleInfoListener {
-                override fun onTelltaleInfoUpdated(info: Telltales?) = set { it.copy(telltalesOn = lampsOn(info)) }
+                override fun onTelltaleInfoUpdated(info: Telltales?) = onLamps(info)
                 override fun onFailed(e: Exception) = warn("telltales", e)
             }
             safety.registerTelltales(l)
             cleanups += { safety.unregisterTelltales(l) }
             // 구독 직후 현재 상태를 한 번 읽어 둔다 (변화가 없으면 콜백이 오지 않을 수 있음)
-            safety.getTelltalesInfo({ info -> set { it.copy(telltalesOn = lampsOn(info)) } }, { e -> warn("telltales get", e) })
+            safety.getTelltalesInfo({ info -> onLamps(info) }, { e -> warn("telltales get", e) })
         }
     }
 

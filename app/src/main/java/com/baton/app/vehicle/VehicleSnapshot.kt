@@ -14,6 +14,11 @@ data class VehicleSnapshot(
     val washerFluidLow: Boolean? = null,
     /** 켜져 있는(ON·깜빡임) 경고등 이름 집합 (Pleos TelltaleType 이름). null = 아직 모름 */
     val telltalesOn: Set<String>? = null,
+    /**
+     * 경고등별 '켜짐' 누적 횟수 (앱 시작 이후). 신호를 받는 즉시 센다.
+     * 상태 흐름이 중간값을 건너뛰어도(1초 안에 켜졌다 꺼짐) 횟수는 빠지지 않는다.
+     */
+    val lampOnCounts: Map<String, Int> = emptyMap(),
     val timestampMs: Long = 0L,
 ) {
     enum class Gear { PARK, REVERSE, NEUTRAL, DRIVE, UNKNOWN }

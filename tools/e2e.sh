@@ -23,7 +23,15 @@ fresh_start() {
   vc lamps_off; vc lamp SeatBelt Off; vc gear Drive; vc seat driver true; vc seat passenger false; vc soc 62
   clear_logs
   "$ADB" shell am start -n $PKG/.MainActivity >/dev/null
-  sleep 7
+  wait_ready
+}
+# 앱이 차량 구성 인식을 마칠 때까지 기다림 (최대 30초) — 준비 전에 신호를 넣으면 놓칠 수 있다
+wait_ready() {
+  for _ in $(seq 1 30); do
+    "$ADB" logcat -d -s "BatonProfile:*" | grep -q "PROFILE" && { sleep 2; return 0; }
+    sleep 1
+  done
+  echo "      (경고: 준비 로그를 30초 안에 못 봄)"
 }
 park_and_exit() { vc gear Park; sleep 2; vc seat driver false; sleep 4; }
 board() { vc seat driver true; sleep 4; }
@@ -42,7 +50,8 @@ expect_ui() {
 }
 tap_text() {
   "$ADB" shell uiautomator dump /sdcard/u.xml >/dev/null
-  local b; b=$("$ADB" shell cat /sdcard/u.xml | grep -o "text=\"$1\"[^>]*bounds=\"[^\"]*\"" | grep -o 'bounds="[^"]*"' | grep -o '[0-9]\+' | tr '\n' ' ')
+  # 부분 일치 (예: "…켜져 있어요" 뒤에 "(지난 운행 중 1번)"이 붙어도 찾음)
+  local b; b=$("$ADB" shell cat /sdcard/u.xml | grep -o "text=\"[^\"]*$1[^\"]*\"[^>]*bounds=\"[^\"]*\"" | head -1 | grep -o 'bounds="[^"]*"' | grep -o '[0-9]\+' | tr '\n' ' ')
   [ -z "$b" ] && return 1
   set -- $b; "$ADB" shell input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 ))
 }
@@ -102,7 +111,7 @@ t06() { # 앱 강제 종료 후 복원
   vc lamp ESCOff On; sleep 1
   park_and_exit
   "$ADB" shell am force-stop $PKG; sleep 1; clear_logs
-  "$ADB" shell am start -n $PKG/.MainActivity >/dev/null; sleep 8
+  "$ADB" shell am start -n $PKG/.MainActivity >/dev/null; wait_ready
   board
   expect_log "복원" "복원: Away" &&
   expect_log "복원 후 탑승 인계" "상태: Away → Boarded \(남은 일=1\)"
@@ -140,7 +149,7 @@ t10() { # 저장 파일 변조 → 크래시 없이 무시
   park_and_exit
   "$ADB" shell "run-as $PKG --user 10 sh -c 'printf Z | dd of=files/handover.bin bs=1 seek=40 conv=notrunc 2>/dev/null'"
   "$ADB" shell am force-stop $PKG; "$ADB" logcat -c -b crash; clear_logs
-  "$ADB" shell am start -n $PKG/.MainActivity >/dev/null; sleep 7
+  "$ADB" shell am start -n $PKG/.MainActivity >/dev/null; wait_ready
   expect_no_log "변조된 인계를 복원하지 않음" "복원: Away" &&
   [ "$("$ADB" logcat -d -b crash | grep -c $PKG)" = "0" ] || { echo "      ✗ 크래시 발생"; return 1; }
 }

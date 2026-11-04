@@ -7,10 +7,12 @@
 
 ## 1. 바통이 하는 일 (1분 요약)
 
-1. 운전자가 **주차(P단)하고 내리면**, 바통이 그 순간 차의 "아직 끝나지 않은 일"을 기억합니다. (창문 열림, 문 안 잠김, 실내등 켜짐, 배터리 부족 등)
-2. **다음 사람이 운전석에 앉으면**, 차 화면에 목록을 띄우고 음성으로 한 번 알려 줍니다.
-3. 창문을 닫는 등 **문제가 해결되는 순간**, 바통이 차 신호로 확인하고 목록에서 스스로 지웁니다. ("뒷좌석 왼쪽 창문 닫힘 확인")
-4. 앱을 열어 두지 않아도 됩니다. 차가 켜지면 바통이 알아서 시작됩니다.
+1. **운행 중** 고장 경고등(타이어 공기압, ABS, 12V 배터리 등)이 켜질 때마다 바통이 셉니다. 경고가 꺼져도 기록은 남습니다.
+2. 운전자가 **주차(P단)하고 내리면**, 그 기록과 함께 바꿔 둔 설정(ESC 꺼짐, i-Pedal 등)·소모품 상태를 저장합니다.
+3. **다음 사람이 운전석에 앉으면**, "출발 전에 알아 두실 것"을 화면에 띄우고 음성으로 한 번 알려 줍니다. ("지난 운행 중 타이어 공기압 경고등이 2번 켜졌어요")
+4. ESC를 다시 켜는 등 **해결되는 순간** 차 신호로 확인하고 스스로 지웁니다. ("ESC 꺼짐 해제 확인")
+5. 문 잠금·창문·실내등은 다루지 않습니다(차량 순정 경고·블루링크 영역). 과속·안전벨트 같은 운전 습관 신호는 기록하지 않습니다.
+6. 앱을 열어 두지 않아도 됩니다. 차가 켜지면 바통이 알아서 시작됩니다.
 
 ---
 
@@ -62,11 +64,11 @@
 bash /c/dev/baton/tools/demo.sh
 ```
 약 1분 동안 자동으로 진행됩니다:
-1. 주행 → 주차
-2. 첫 운전자가 창문을 열고, 실내등을 켜고, 문을 안 잠근 채 하차
-3. 다음 운전자 탑승 → **화면 + 음성 안내**
-4. 창문 닫기 → 실내등 끄기 → 문 잠그기 (하나씩 초록 체크로 바뀌며 "○○ 확인" 음성)
-5. 출발
+1. 주행 중 타이어 공기압 경고가 두 번 켜졌다 꺼짐
+2. 운전자가 ESC를 끈 채 주차하고 하차
+3. 다음 운전자 탑승 → **화면 + 음성 안내** ("지난 운행 중 타이어 공기압 경고등이 2번 켜졌어요", "ESC 꺼짐")
+4. ESC 다시 켜기 → 초록 체크로 바뀌며 "ESC 꺼짐 해제 확인" 음성
+5. (화면에서 '받았어요' 누르기) → 출발
 
 천천히 보여 주고 싶으면 숫자를 붙이세요(초 단위 간격): `bash /c/dev/baton/tools/demo.sh 6`
 
@@ -80,19 +82,18 @@ bash /c/dev/baton/tools/demo.sh
 |---|---|
 | 주차 / 출발 | Motion › **Gear Selection**: **P** / **D** |
 | 운전자 내리기 / 타기 | Seat › **Seat Occupancy** → Driver: **Empty** / **Occupied** |
-| 창문 열기 / 닫기 | Window › **Window Position** → Rear left 슬라이더 |
-| 문 잠금 | Door › **Door Lock**: **Lock** / **Unlock** |
-| 실내등 | Light › **Cabin Lights Switch**: **On** / **Off** |
+| 경고등 켜기 / 끄기 | Safety › **Telltales** → 종류(TPMS, ABS, ESC Off, Low Volt Battery …) **On** / **Off** |
 | 배터리 | EV Battery › **Battery SOC** 슬라이더 |
 
 명령어로도 바꿀 수 있습니다 (조작판이 열려 있지 않아도 됨):
 ```bash
-bash /c/dev/baton/tools/vc.sh gear Park          # 기어 P (Park/Reverse/Neutral/Drive)
-bash /c/dev/baton/tools/vc.sh seat driver false  # 운전자 내림 (true면 탐)
-bash /c/dev/baton/tools/vc.sh window_rl 40       # 뒷좌석 왼쪽 창문 40%
-bash /c/dev/baton/tools/vc.sh lock false         # 문 잠금 해제 (true면 잠금)
-bash /c/dev/baton/tools/vc.sh cabin true         # 실내등 켬
-bash /c/dev/baton/tools/vc.sh soc 18             # 배터리 18%
+bash /c/dev/baton/tools/vc.sh gear Park             # 기어 P (Park/Reverse/Neutral/Drive)
+bash /c/dev/baton/tools/vc.sh seat driver false     # 운전자 내림 (true면 탐)
+bash /c/dev/baton/tools/vc.sh lamp TPMS On          # 타이어 공기압 경고등 켜기 (Off로 끄기)
+bash /c/dev/baton/tools/vc.sh lamp ESCOff On        # ESC 꺼짐 표시 켜기
+bash /c/dev/baton/tools/vc.sh lamp LowVoltBattery On Red   # 12V 배터리 경고 (색: Red|Yellow)
+bash /c/dev/baton/tools/vc.sh lamps_off             # 주요 경고등 모두 끄기
+bash /c/dev/baton/tools/vc.sh soc 18                # 배터리 18%
 ```
 > 운전자가 내린 뒤 **2초가 지나야** "하차"로 인식합니다 (몸을 들썩이는 것을 하차로 착각하지 않도록).
 
@@ -103,14 +104,15 @@ bash /c/dev/baton/tools/vc.sh soc 18             # 배터리 18%
 | 화면 | 언제 | 보이는 것 |
 |---|---|---|
 | **주행 중** | 기어가 P가 아닐 때 | 한 줄만 (운전 중 시선 분산 방지) |
-| **주차됨** | P단, 운전자 착석 | 지금 내리면 넘겨질 일 미리보기 + "지금 해결하면 다음 사람에게 넘어가지 않아요" |
-| **다음 운전자에게 넘길 준비 완료** | 운전자가 내린 뒤 | 기록된 항목 |
-| **이어받은 일** | 다음 운전자가 앉았을 때 | 항목 카드, 배터리 변화, **받았어요** 버튼 |
+| **주차됨** | P단, 운전자 착석 | "지금 내리면 다음 운행에 이렇게 전달돼요" 미리보기 (설정은 "내리기 전에 되돌릴 수 있어요") |
+| **다음 운행에 넘길 내용 저장됨** | 운전자가 내린 뒤 | 기록된 항목 |
+| **출발 전에 알아 둘 것** | 다음 운전자가 앉았을 때 | 항목 카드, 배터리 변화, **받았어요** 버튼 |
 | **인계 이력** | 주차 중 상단 **이력** 버튼 | 지난 인계 기록 (날짜·남긴 일·해결·수령·배터리) |
 
 **카드 색과 기호**
-- 빨강 `!` **안전** (문 안 잠김, 문·트렁크 열림, 브레이크액 부족) → 누를 수 없음. 실제로 해결해야 사라짐
-- 노랑 `•` **할 일** (창문, 실내등, 배터리 부족) → 누르면 "확인함" 처리, 8초 안에 **되돌리기** 가능
+- 빨강 `!` **안전** (지금 켜진 타이어·ABS·12V 배터리 경고, ESC 꺼짐, 브레이크액 부족 등) → 지금 켜져 있으면 누를 수 없음. 실제로 해결해야 사라짐
+- 노랑 `•` **할 일** (i-Pedal 켜짐, 크리프 꺼짐, 배터리 부족 등) / 파랑 **참고** (스포츠 모드, 워셔액)
+- "지난 운행 중 ○○ 경고 N번"은 이미 꺼진 경고의 기록이라, 확인했으면 눌러서 내릴 수 있음 (8초 안에 **되돌리기**)
 - 초록 `✓` **해결됨**
 
 **버튼**
@@ -140,7 +142,7 @@ export JAVA_HOME=/c/dev/tools/jdk-17.0.21+9
 "$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe" install app/build/outputs/apk/debug/app-debug.apk
 bash tools/e2e.sh
 ```
-마지막 줄에 `결과: 통과 16 / 실패 0`이 나오면 성공입니다. 시연 전에는 다시 ③으로 release 버전을 설치하세요.
+마지막 줄에 `결과: 통과 17 / 실패 0`이 나오면 성공입니다. 시연 전에는 다시 ③으로 release 버전을 설치하세요.
 
 ---
 

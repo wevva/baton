@@ -99,6 +99,16 @@ class HandoverMachineTest {
 
     // ── TR: 지난 운행 중 켜졌던 경고 (핵심 차별점) ─────────────────
 
+    @Test fun `TR-10 1초 안에 켜졌다 꺼져 중간 상태를 못 봐도 누적 횟수로 빠짐없이 센다`() {
+        val m = HandoverMachine(car)
+        m.onSnapshot(snap(0, gear = Gear.DRIVE))
+        // 켜짐 상태는 한 번도 전달되지 않고, 누적 횟수만 2로 올라간 채 전달됨 (상태 흐름이 값을 합친 경우)
+        m.onSnapshot(snap(100, gear = Gear.DRIVE, lamps = emptySet()).copy(lampOnCounts = mapOf("TPMS" to 2)))
+        m.onSnapshot(snap(200))
+        assertEquals(2, exit(m, 1_000).handover.open.single().value)
+    }
+
+
     @Test fun `TR-01 주행 중 켜졌다 꺼진 타이어 경고는 '지난 운행 중 1번'으로 넘어간다`() {
         val m = HandoverMachine(car)
         drive(m, 0, setOf("TPMS"), emptySet())
