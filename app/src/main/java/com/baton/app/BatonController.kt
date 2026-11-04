@@ -31,6 +31,10 @@ data class UiState(
     /** 주차 중(아직 하차 전) 미리보기: 지금 내리면 넘겨질 일 */
     val preview: List<OpenItem> = emptyList(),
     val locale: Locale = Locale.getDefault(),
+    /** 운전자가 '확인했어요'로 넘긴 항목 키 (신호로 해결되지 않는 항목용) */
+    val acknowledged: Set<String> = emptySet(),
+    /** 방금 확인 처리한 항목 — 8초간 되돌리기 가능 */
+    val undoable: OpenItem? = null,
 )
 
 /**
@@ -68,11 +72,30 @@ class BatonController(
                 snapshot = snap,
                 state = after,
                 preview = if (after is State.Parked) detector.detect(profile, snap) else emptyList(),
+                // 새 인계가 시작되면(하차) 이전 확인 기록은 비운다
+                acknowledged = if (after is State.Away && before !is State.Away) emptySet() else _ui.value.acknowledged,
             )
             if (before::class != after::class) Log.i(TAG, "상태: ${before::class.simpleName} → ${after::class.simpleName} (좌석=${snap.seatOccupied.mapKeys { it.key.code }}, 남은 일=${(after as? State.Away)?.handover?.open?.size ?: (after as? State.Boarded)?.handover?.open?.size ?: "-"})")
             if (before != after) store.save(after, m.history)
             announce(before, after)
         }
+    }
+
+    private var undoJob: kotlinx.coroutines.Job? = null
+
+    fun acknowledge(item: OpenItem) {
+        _ui.value = _ui.value.copy(acknowledged = _ui.value.acknowledged + item.key, undoable = item)
+        undoJob?.cancel()
+        undoJob = scope.launch {
+            delay(UNDO_WINDOW_MS)
+            _ui.value = _ui.value.copy(undoable = null)
+        }
+    }
+
+    fun undo() {
+        val item = _ui.value.undoable ?: return
+        undoJob?.cancel()
+        _ui.value = _ui.value.copy(acknowledged = _ui.value.acknowledged - item.key, undoable = null)
     }
 
     fun setLocale(locale: Locale) {
@@ -107,5 +130,9 @@ class BatonController(
         speaker.release()
     }
 
-    companion object { const val TAG = "Baton" }
+    companion object {
+        const val TAG = "Baton"
+        /** 되돌리기 가능 시간. 차 안에서는 손이 늦을 수 있어 일반 앱(약 5초)보다 길게 */
+        const val UNDO_WINDOW_MS = 8_000L
+    }
 }

@@ -42,4 +42,8 @@
     <string name="done_window_open">%1$s 창문 닫힘 확인</string>
     <string name="done_cabin_light_on">실내등 꺼짐 확인</string>
     <string name="done_low_battery">충전 확인</string>
+
+    <string name="hint_tap_to_ack">항목을 누르면 확인 처리돼요</string>
+    <string name="acknowledged">확인함: %1$s</string>
+    <string name="undo">되돌리기</string>
 </resources>

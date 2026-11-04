@@ -49,25 +49,52 @@ private object C {
 }
 
 @Composable
-fun HandoverScreen(ui: UiState, onLocale: (Locale) -> Unit, onDiagnostics: () -> Unit) {
+fun HandoverScreen(
+    ui: UiState,
+    onLocale: (Locale) -> Unit,
+    onDiagnostics: () -> Unit,
+    onAcknowledge: (OpenItem) -> Unit = {},
+    onUndo: () -> Unit = {},
+) {
     // 화면 언어 = 현재 앱 설정 언어 (LocalConfiguration이 바뀌면 다시 그림)
     val config = LocalConfiguration.current
     val ctx = LocalContext.current
     val t = remember(config) { ItemText(ctx, config.locales[0]) }
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(C.bg)
-            .padding(horizontal = 48.dp, vertical = 32.dp)
-    ) {
-        TopBar(t, t.locale, onLocale, onDiagnostics)
-        Spacer(Modifier.height(24.dp))
-        when (val s = ui.state) {
-            State.Driving -> Driving(t, ui)
-            State.Parked -> Parked(t, ui.preview)
-            is State.Away -> Handover(t, t.str(R.string.state_away), s.handover, ui, showEnergy = false)
-            is State.Boarded -> Handover(t, t.str(R.string.state_boarded), s.handover, ui, showEnergy = true)
+    Box(Modifier.fillMaxSize().background(C.bg)) {
+        Column(Modifier.fillMaxSize().padding(horizontal = 48.dp, vertical = 32.dp)) {
+            TopBar(t, t.locale, onLocale, onDiagnostics)
+            Spacer(Modifier.height(24.dp))
+            when (val s = ui.state) {
+                State.Driving -> Driving(t, ui)
+                State.Parked -> Parked(t, ui.preview)
+                is State.Away -> Handover(t, t.str(R.string.state_away), s.handover, ui, showEnergy = false, onAcknowledge = null)
+                is State.Boarded -> Handover(t, t.str(R.string.state_boarded), s.handover, ui, showEnergy = true, onAcknowledge = onAcknowledge)
+            }
         }
+        val undoable = ui.undoable
+        if (undoable != null && ui.state is State.Boarded) {
+            UndoBar(t, undoable, onUndo, Modifier.align(Alignment.BottomCenter))
+        }
+    }
+}
+
+/** 실수에 관대하게: 확인 처리 후 8초간 되돌리기 */
+@Composable
+private fun UndoBar(t: ItemText, item: OpenItem, onUndo: () -> Unit, modifier: Modifier) {
+    Row(
+        modifier
+            .padding(bottom = 32.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(C.text)
+            .padding(start = 28.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(t.str(R.string.acknowledged, t.item(item)), color = C.bg, fontSize = 22.sp)
+        Spacer(Modifier.width(24.dp))
+        Text(
+            t.str(R.string.undo), color = Color(0xFF1F6FEB), fontSize = 22.sp, fontWeight = FontWeight.Bold,
+            modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable { onUndo() }.padding(horizontal = 18.dp, vertical = 12.dp),
+        )
     }
 }
 
@@ -119,7 +146,15 @@ private fun Parked(t: ItemText, preview: List<OpenItem>) {
 }
 
 @Composable
-private fun Handover(t: ItemText, title: String, h: com.baton.app.handover.HandoverMachine.Handover, ui: UiState, showEnergy: Boolean) {
+private fun Handover(
+    t: ItemText,
+    title: String,
+    h: com.baton.app.handover.HandoverMachine.Handover,
+    ui: UiState,
+    showEnergy: Boolean,
+    onAcknowledge: ((OpenItem) -> Unit)?,
+) {
+    val open = h.open.filter { it.key !in ui.acknowledged }
     Row(Modifier.fillMaxSize()) {
         Column(Modifier.width(560.dp)) {
             Text(title, color = C.text, fontSize = 40.sp, fontWeight = FontWeight.Bold)
@@ -131,27 +166,28 @@ private fun Handover(t: ItemText, title: String, h: com.baton.app.handover.Hando
             }
             Spacer(Modifier.height(24.dp))
             when {
-                h.open.isEmpty() && h.resolved.isEmpty() -> Text(t.str(R.string.empty_handover), color = C.done, fontSize = 28.sp)
-                h.open.isEmpty() -> Text(t.str(R.string.all_clear), color = C.done, fontSize = 28.sp)
+                open.isEmpty() && h.resolved.isEmpty() -> Text(t.str(R.string.empty_handover), color = C.done, fontSize = 28.sp)
+                open.isEmpty() -> Text(t.str(R.string.all_clear), color = C.done, fontSize = 28.sp)
+                onAcknowledge != null -> Text(t.str(R.string.hint_tap_to_ack), color = C.sub, fontSize = 20.sp)
             }
         }
         Spacer(Modifier.width(32.dp))
         Column(Modifier.weight(1f)) {
-            ItemList(t, h.open, h.resolved.takeLast(3).reversed().map { it.item })
+            ItemList(t, open, h.resolved.takeLast(3).reversed().map { it.item }, onAcknowledge)
         }
     }
 }
 
 @Composable
-private fun ItemList(t: ItemText, open: List<OpenItem>, resolved: List<OpenItem>) {
+private fun ItemList(t: ItemText, open: List<OpenItem>, resolved: List<OpenItem>, onTap: ((OpenItem) -> Unit)? = null) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        items(open, key = { "o" + it.key }) { ItemCard(t, it, done = false) }
-        items(resolved, key = { "r" + it.key }) { ItemCard(t, it, done = true) }
+        items(open, key = { "o" + it.key }) { ItemCard(t, it, done = false, onTap = onTap) }
+        items(resolved, key = { "r" + it.key }) { ItemCard(t, it, done = true, onTap = null) }
     }
 }
 
 @Composable
-private fun ItemCard(t: ItemText, item: OpenItem, done: Boolean) {
+private fun ItemCard(t: ItemText, item: OpenItem, done: Boolean, onTap: ((OpenItem) -> Unit)?) {
     val accent = when {
         done -> C.done
         item.type.tier == OpenItem.Tier.SAFETY -> C.safety
@@ -170,6 +206,7 @@ private fun ItemCard(t: ItemText, item: OpenItem, done: Boolean) {
             .clip(RoundedCornerShape(20.dp))
             .background(C.card)
             .border(2.dp, accent.copy(alpha = if (done) 0.6f else 0.35f), RoundedCornerShape(20.dp))
+            .then(if (onTap != null) Modifier.clickable { onTap(item) } else Modifier)
             .padding(horizontal = 28.dp, vertical = 22.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

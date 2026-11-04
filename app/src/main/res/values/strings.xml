@@ -43,4 +43,8 @@
     <string name="done_window_open">%1$s window closed</string>
     <string name="done_cabin_light_on">Cabin light off</string>
     <string name="done_low_battery">Charging confirmed</string>
+
+    <string name="hint_tap_to_ack">Tap an item to mark it as checked</string>
+    <string name="acknowledged">Checked: %1$s</string>
+    <string name="undo">Undo</string>
 </resources>

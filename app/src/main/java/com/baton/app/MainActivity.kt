@@ -67,6 +67,8 @@ class MainActivity : ComponentActivity() {
                         // 실제 반영은 onConfigurationChanged에서 (언어 변경은 비동기로 적용됨)
                         onLocale = { l -> AppLanguage.set(this, l) },
                         onDiagnostics = { diagnostics = true },
+                        onAcknowledge = controller::acknowledge,
+                        onUndo = controller::undo,
                     )
                 }
             }

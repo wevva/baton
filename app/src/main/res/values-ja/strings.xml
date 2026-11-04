@@ -42,4 +42,8 @@
     <string name="done_window_open">%1$sの窓が閉まりました</string>
     <string name="done_cabin_light_on">室内灯が消えました</string>
     <string name="done_low_battery">充電を確認</string>
+
+    <string name="hint_tap_to_ack">項目をタップすると確認済みになります</string>
+    <string name="acknowledged">確認済み: %1$s</string>
+    <string name="undo">元に戻す</string>
 </resources>
