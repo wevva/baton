@@ -4,7 +4,7 @@ import ai.pleos.playground.vehicle.Vehicle
 import ai.pleos.playground.vehicle.constant.area.DoorValue
 import ai.pleos.playground.vehicle.constant.area.SeatValue
 import ai.pleos.playground.vehicle.constant.area.WindowValue
-import android.util.Log
+import com.baton.app.security.BatonLog
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
@@ -17,13 +17,12 @@ class ProfileDiscovery(private val vehicle: Vehicle) {
 
     data class Result(
         val profile: VehicleProfile,
-        val vin: String?,
         val log: List<String>,
     )
 
     suspend fun discover(): Result {
         val log = mutableListOf<String>()
-        fun note(s: String) { log += s; Log.i(TAG, s) }
+        fun note(s: String) { log += s; BatonLog.i(TAG, s) }
 
         val doorPos = ask("doorPosition", ::note) { ok, fail -> vehicle.getDoor().checkDoorPositionCapabilities({ _, areas -> ok(areas) }, fail) }
         val doorLock = ask("doorLock", ::note) { ok, fail -> vehicle.getDoor().checkDoorLockCapabilities({ _, areas -> ok(areas) }, fail) }
@@ -33,7 +32,7 @@ class ProfileDiscovery(private val vehicle: Vehicle) {
             vehicle.getLight().checkCabinLightStateCapabilities({ cfg, _ -> ok(cfg) }, fail)
         }
         val soc = ask("batterySoc", ::note) { ok, fail -> vehicle.getEvBattery().checkEvBatteryStateOfChargeCapabilities(ok, fail) }
-        val vin = ask("vin", ::note) { ok, fail -> vehicle.getCarInfo().getVINInfo(ok, fail) }
+        // 차대번호(VIN)는 개인정보와 연결될 수 있어 읽지 않는다 (기능 판단에 불필요)
         // getCapabilityInfo는 PRIVATE 권한 필요(서드파티 불가) → 기능별 확인 API로 대신함
 
         val doorSpots = doorPos?.keys?.flatMap { area -> area.values.mapNotNull { doorSpot(it) } }?.distinct().orEmpty()
@@ -55,7 +54,7 @@ class ProfileDiscovery(private val vehicle: Vehicle) {
         note("PROFILE rows=${profile.rows} seats=${profile.seatCount} doors=${profile.doors.map { it.code }} " +
             "windows=${profile.windows.mapKeys { it.key.code }} lock=${profile.hasDoorLock} trunk=${profile.hasTrunk} " +
             "cabin=${profile.hasCabinLight} soc=${profile.hasBatterySoc}")
-        return Result(profile, vin, log)
+        return Result(profile, log)
     }
 
     /** SDK 콜백 하나를 기다린다. 실패·시간초과면 null (= 이 차엔 그 기능이 없다고 본다) */

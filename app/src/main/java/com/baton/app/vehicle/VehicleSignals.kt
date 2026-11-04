@@ -16,7 +16,7 @@ import ai.pleos.playground.vehicle.listener.GearSelectionListener
 import ai.pleos.playground.vehicle.listener.LightStateListener
 import ai.pleos.playground.vehicle.listener.SeatOccupancyListener
 import ai.pleos.playground.vehicle.listener.WindowPositionListener
-import android.util.Log
+import com.baton.app.security.BatonLog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -135,7 +135,7 @@ class VehicleSignals(
     }
 
     private fun warn(name: String, e: Exception) {
-        Log.w(TAG, "$name: ${e.javaClass.simpleName} ${e.message}")
+        BatonLog.w(TAG, "$name: ${e.javaClass.simpleName} ${e.message}")
     }
 
     private fun VehicleGear?.toGear() = when (this) {

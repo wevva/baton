@@ -5,7 +5,7 @@ import ai.pleos.playground.tts.constant.ErrorType
 import ai.pleos.playground.tts.constant.Mode
 import ai.pleos.playground.tts.listener.OnInitializeListener
 import android.content.Context
-import android.util.Log
+import com.baton.app.security.BatonLog
 import java.util.Locale
 
 /**
@@ -21,9 +21,9 @@ class Speaker(context: Context) {
         runCatching {
             tts.initialize(object : OnInitializeListener {
                 override fun onSuccess() { ready = true }
-                override fun onFailure(error: ErrorType) { Log.w(TAG, "TTS 초기화 실패: $error") }
+                override fun onFailure(error: ErrorType) { BatonLog.w(TAG, "TTS 초기화 실패: $error") }
             })
-        }.onFailure { Log.w(TAG, "TTS 초기화 예외: ${it.message}") }
+        }.onFailure { BatonLog.w(TAG, "TTS 초기화 예외: ${it.message}") }
     }
 
     fun canSpeak(locale: Locale) = ready && locale.language in VOICE_LANGUAGES
@@ -33,7 +33,7 @@ class Speaker(context: Context) {
         runCatching {
             tts.setLocale(if (locale.language == "ko") Locale.KOREA else Locale.US)
             tts.speak(text, false)
-        }.onFailure { Log.w(TAG, "발화 실패: ${it.message}") }
+        }.onFailure { BatonLog.w(TAG, "발화 실패: ${it.message}") }
     }
 
     fun release() { runCatching { tts.release() } }

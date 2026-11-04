@@ -14,7 +14,7 @@ import ai.pleos.playground.vehicle.listener.DoorLockStateListener
 import ai.pleos.playground.vehicle.listener.EvBatteryStateOfChargeListener
 import ai.pleos.playground.vehicle.listener.GearSelectionListener
 import android.content.Context
-import android.util.Log
+import com.baton.app.security.BatonLog
 
 /**
  * 바통이 쓸 차량 신호를 한 번씩 읽어 보고, 핵심 신호(기어·도어 잠금·SoC)는 변화를 구독한다.
@@ -124,13 +124,13 @@ class SignalProbe(context: Context, private val onUpdate: (String, String) -> Un
     }
 
     private fun report(name: String, value: String) {
-        Log.i(TAG, "$name = $value")
+        BatonLog.i(TAG, "$name = $value")
         onUpdate(name, value)
     }
 
     private fun fail(name: String, e: Exception) {
         val msg = "실패: ${e.javaClass.simpleName} ${e.message ?: ""}".trim()
-        Log.w(TAG, "$name = $msg")
+        BatonLog.w(TAG, "$name = $msg")
         onUpdate(name, msg)
     }
 

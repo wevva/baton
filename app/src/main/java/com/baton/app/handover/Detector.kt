@@ -34,4 +34,17 @@ class Detector(
         }
         return items.sortedBy { it.type.tier.ordinal }
     }
+
+    /**
+     * 이 항목을 판단할 신호 값이 실제로 들어와 있는지.
+     * 값이 없으면(앱 재시작 직후, 신호 끊김) '해결됨'으로 보지 않는다 — 모르는 것은 해결된 것이 아니다.
+     */
+    fun isKnown(item: OpenItem, s: VehicleSnapshot): Boolean = when (item.type) {
+        OpenItem.Type.DOORS_UNLOCKED -> s.doorsLocked != null
+        OpenItem.Type.DOOR_OPEN -> item.spot != null && s.doorOpen[item.spot] != null
+        OpenItem.Type.TRUNK_OPEN -> s.trunkOpen != null
+        OpenItem.Type.WINDOW_OPEN -> item.spot != null && s.windowPos[item.spot] != null
+        OpenItem.Type.CABIN_LIGHT_ON -> s.cabinLightOn != null
+        OpenItem.Type.LOW_BATTERY -> s.batterySoc != null
+    }
 }

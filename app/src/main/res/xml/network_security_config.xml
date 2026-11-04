@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 보안: 현재 네트워크를 쓰지 않지만, 향후 추가되더라도 평문(HTTP) 통신과 사용자 설치 인증서는 신뢰하지 않는다 -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

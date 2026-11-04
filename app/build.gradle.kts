@@ -34,7 +34,10 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // 보안: 코드 축소·난독화(R8) + 리소스 축소, 디버그 로그 제거 (proguard-rules.pro)
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.findByName("release")
         }
     }
@@ -63,6 +66,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
     testImplementation("junit:junit:4.13.2")
+    // 단위 테스트에서 Android 스텁 대신 실제 org.json 구현 사용 (저장 형식 테스트용)
+    testImplementation("org.json:json:20240303")
 }
 
 // 제출 규격: apk/팀명_앱이름_release.apk (팀명: 바통랩)

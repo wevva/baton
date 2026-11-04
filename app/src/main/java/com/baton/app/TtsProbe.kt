@@ -6,7 +6,7 @@ import ai.pleos.playground.tts.constant.Mode
 import ai.pleos.playground.tts.listener.EventListener
 import ai.pleos.playground.tts.listener.OnInitializeListener
 import android.content.Context
-import android.util.Log
+import com.baton.app.security.BatonLog
 import java.util.Locale
 
 /**
@@ -81,7 +81,7 @@ class TtsProbe(
     }
 
     private fun report(name: String, value: String) {
-        Log.i(SignalProbe.TAG, "$name = $value")
+        BatonLog.i(SignalProbe.TAG, "$name = $value")
         onUpdate(name, value)
     }
 }

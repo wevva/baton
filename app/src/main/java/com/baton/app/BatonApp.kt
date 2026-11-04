@@ -18,6 +18,7 @@ class BatonApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        com.baton.app.security.BatonLog.init(this)
         probe = SignalProbe(this) { _, _ -> }
         probe.start()
         controller = BatonController(this, probe.vehicle, scope)

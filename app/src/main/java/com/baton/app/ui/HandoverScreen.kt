@@ -219,8 +219,9 @@ private fun Handover(
 @Composable
 private fun ItemList(t: ItemText, open: List<OpenItem>, resolved: List<OpenItem>, onTap: ((OpenItem) -> Unit)? = null) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        items(open, key = { "o" + it.key }) { ItemCard(t, it, done = false, onTap = onTap) }
-        items(resolved, key = { "r" + it.key }) { ItemCard(t, it, done = true, onTap = null) }
+        // 같은 키가 두 번 들어오면 Compose가 종료되므로 화면에서도 한 번 더 중복 제거 (이중 방어)
+        items(open.distinctBy { it.key }, key = { "o" + it.key }) { ItemCard(t, it, done = false, onTap = onTap) }
+        items(resolved.distinctBy { it.key }, key = { "r" + it.key }) { ItemCard(t, it, done = true, onTap = null) }
     }
 }
 

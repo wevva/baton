@@ -2,7 +2,7 @@ package com.baton.app
 
 import ai.pleos.playground.vehicle.Vehicle
 import android.content.Context
-import android.util.Log
+import com.baton.app.security.BatonLog
 import com.baton.app.handover.Detector
 import com.baton.app.handover.HandoverMachine
 import com.baton.app.handover.HandoverMachine.State
@@ -62,26 +62,40 @@ class BatonController(
         val m = HandoverMachine(profile, detector).also { machine = it }
         store.load()?.let { (saved, history) ->
             m.restore(saved, history)
-            Log.i(TAG, "복원: ${saved::class.simpleName}, 이력 ${history.size}건")
+            BatonLog.i(TAG, "복원: ${saved::class.simpleName}, 이력 ${history.size}건")
         }
         val s = VehicleSignals(vehicle, profile).also { signals = it }
         _ui.value = _ui.value.copy(ready = true, profile = profile, state = m.state, history = m.history.reversed())
         s.start()
+        // 신호가 바뀌지 않아도 '하차 2초 유지' 같은 시간 조건을 판단하도록 1초마다 확인
+        launch {
+            while (true) {
+                delay(1_000)
+                val before = m.state
+                val after = m.onTick(System.currentTimeMillis())
+                if (before != after) apply(m, profile, before, after, _ui.value.snapshot)
+            }
+        }
         s.snapshot.collect { snap ->
             val before = m.state
             val after = m.onSnapshot(snap)
-            _ui.value = _ui.value.copy(
-                snapshot = snap,
-                state = after,
-                history = m.history.reversed(),
-                preview = if (after is State.Parked) detector.detect(profile, snap) else emptyList(),
-                // 새 인계가 시작되면(하차) 이전 확인 기록은 비운다
-                acknowledged = if (after is State.Away && before !is State.Away) emptySet() else _ui.value.acknowledged,
-            )
-            if (before::class != after::class) Log.i(TAG, "상태: ${before::class.simpleName} → ${after::class.simpleName} (좌석=${snap.seatOccupied.mapKeys { it.key.code }}, 남은 일=${(after as? State.Away)?.handover?.open?.size ?: (after as? State.Boarded)?.handover?.open?.size ?: "-"})")
-            if (before != after) store.save(after, m.history)
-            announce(before, after)
+            apply(m, profile, before, after, snap)
         }
+    }
+
+    /** 상태 변화를 화면·저장·음성에 반영 (메인 스레드에서만 호출되어 순서가 보장됨) */
+    private fun apply(m: HandoverMachine, profile: VehicleProfile, before: State, after: State, snap: VehicleSnapshot) {
+        _ui.value = _ui.value.copy(
+            snapshot = snap,
+            state = after,
+            history = m.history.reversed(),
+            preview = if (after is State.Parked) detector.detect(profile, snap) else emptyList(),
+            // 새 인계가 시작되면(하차) 이전 확인 기록은 비운다
+            acknowledged = if (after is State.Away && before !is State.Away) emptySet() else _ui.value.acknowledged,
+        )
+        if (before::class != after::class) BatonLog.i(TAG, "상태: ${before::class.simpleName} → ${after::class.simpleName} (남은 일=${(after as? State.Away)?.handover?.open?.size ?: (after as? State.Boarded)?.handover?.open?.size ?: "-"})")
+        if (before != after) store.save(after, m.history)
+        announce(before, after)
     }
 
     private var undoJob: kotlinx.coroutines.Job? = null
@@ -121,7 +135,7 @@ class BatonController(
             val h = after.handover
             val msg = if (h.allClear) text.str(R.string.voice_none)
             else text.str(R.string.voice_intro, h.open.size) + " " + h.open.joinToString(". ") { text.item(it) }
-            Log.i(TAG, "안내: $msg")
+            BatonLog.i(TAG, "안내: $msg")
             speaker.say(msg, locale)
         }
         // 출발 순간(D단 진입) 확인 안 된 안전 항목이 남아 있으면 한 번만 알림
@@ -131,7 +145,7 @@ class BatonController(
             }
             if (safety.isNotEmpty()) {
                 val msg = text.str(R.string.voice_depart_safety, safety.size) + " " + safety.joinToString(". ") { text.item(it) }
-                Log.i(TAG, "안내: $msg")
+                BatonLog.i(TAG, "안내: $msg")
                 speaker.say(msg, locale)
             }
         }
@@ -140,7 +154,7 @@ class BatonController(
             if (newly > 0) {
                 after.handover.resolved.takeLast(newly).forEach {
                     val msg = text.str(R.string.voice_resolved, text.done(it.item))
-                    Log.i(TAG, "안내: $msg")
+                    BatonLog.i(TAG, "안내: $msg")
                     speaker.say(msg, locale)
                 }
             }
