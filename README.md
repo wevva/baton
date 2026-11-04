@@ -36,6 +36,7 @@
 | 창문 열림(위치별, %) | 할 일 | 창문 위치 신호 |
 | 실내등 켜짐 | 할 일 | 실내등 상태 신호 |
 | 배터리 부족(20% 이하) | 할 일 | SoC 신호 / 확인 처리 |
+| 브레이크액 부족 (지원 차량) | 안전 | 브레이크액 상태 신호 |
 
 ## 설계 특징
 
@@ -45,11 +46,24 @@
 - **주행 중 최소 표시**: P단이 아니면 한 줄 상태만 표시합니다. 상세 인계와 음성은 주차 중에만 동작합니다.
 - **전원이 꺼져도 유지**: 하차 순간의 인계는 저장되어, 앱이 종료되거나 차량 전원이 꺼진 뒤에도 다음 탑승 때 이어집니다.
 
+## 보안
+- **읽기 전용**: 차량 제어 권한(`CONTROL_*`)을 요청하지 않습니다. 앱이 장악당해도 차량을 움직이거나 문을 열 수 없습니다.
+- **암호화 저장**: 인계는 AES-256-GCM으로 암호화하고 키는 Android Keystore에 둡니다. 변조되면 감지해 버립니다.
+- **최소 권한·오프라인**: 인터넷 권한이 없고, 백업·기기 간 이전을 막습니다. 위치·얼굴·음성·차대번호를 수집하지 않습니다.
+- **release 강화**: R8 난독화, 로그 완전 차단, Gradle 배포판 체크섬 고정.
+- 상세: [docs/SECURITY.md](docs/SECURITY.md)
+
+## 테스트
+- 단위 테스트 58개: `./gradlew testDebugUnitTest` (상태 머신, 탐지, 저장 형식·악성 입력, 다국어 완전성)
+- 에뮬레이터 E2E 12개: `bash tools/e2e.sh` (실제 신호 주입 → 앱 로그로 합격 판정)
+- 전체 케이스 목록(약 100건, 실차 필요·범위 밖 포함): [docs/TEST_CASES.md](docs/TEST_CASES.md)
+
 ## 구조
 
 ```
-vehicle/   Spot·VehicleProfile(차량 구성) · ProfileDiscovery(자동 인식) · VehicleSignals(실시간 신호) · Quirks(플랫폼 보정)
-handover/  OpenItem(인계 항목) · Detector(미해결 탐지) · HandoverMachine(주행→주차→하차→탑승→출발) · HandoverStore(저장)
+vehicle/   Spot·VehicleProfile(차량 구성) · ProfileDiscovery(자동 인식) · DriverSeat(좌·우핸들) · VehicleSignals(실시간 신호) · Quirks(플랫폼 보정)
+handover/  OpenItem(인계 항목) · Detector(미해결 탐지) · HandoverMachine(주행→주차→하차→탑승→출발) · HandoverCodec(저장 형식·검증) · HandoverStore(암호화 저장)
+security/  SecureFile(AES-256-GCM + Keystore) · BatonLog(release 로그 차단)
 i18n/      ItemText(받는 사람 언어로 문장 생성) · AppLanguage(앱별 언어)
 voice/     Speaker(Pleos TTS, 온디바이스)
 ui/        HandoverScreen(인계 화면) · HistoryScreen(인계 이력)
@@ -82,6 +96,7 @@ bash tools/vc.sh gear Drive        # 개별 신호 조작 (gear | soc | lock | d
 - 착석 값이 반전되어 들어오는 현상이 있어 `Quirks`에서 보정합니다.
 - 안드로이드 표준 TTS는 초기화되지 않아 Pleos TTS SDK를 사용합니다. 온디바이스 음성은 한국어·영어만 생성됩니다(일본어·중국어는 화면 표시만).
 - 앱 내부 Resources 언어 지정이 시스템 언어로 덮어써져, 앱별 언어 API(LocaleManager)로 화면 언어를 바꿉니다.
+- release(R8) 빌드는 Pleos SDK 내부 Gson의 제네릭 정보 유지 규칙이 필요합니다(`app/proguard-rules.pro`).
 
 ## 출처
 
@@ -93,6 +108,9 @@ bash tools/vc.sh gear Drive        # 개별 신호 조작 (gear | soc | lock | d
 | AndroidX (core, activity-compose, lifecycle, Compose BOM, material3), kotlinx-coroutines | https://developer.android.com/jetpack/androidx , https://github.com/Kotlin/kotlinx.coroutines | Apache-2.0 |
 | Android Gradle Plugin, Kotlin, Gradle | https://developer.android.com/build , https://kotlinlang.org , https://gradle.org | Apache-2.0 |
 | JUnit 4.13.2 (테스트) | https://junit.org/junit4/ | EPL-1.0 |
+| org.json 20240303 (테스트) | https://github.com/stleary/JSON-java | Public Domain |
+| Gson R8 규칙 | https://github.com/google/gson/blob/main/Troubleshooting.md | Apache-2.0 |
+| OWASP MASVS (보안 점검 기준) | https://mas.owasp.org/ | CC BY-SA |
 | NHTSA 운전자 주의분산 가이드라인 (주행 중 UI 원칙) | https://www.nhtsa.gov/sites/nhtsa.gov/files/811781.pdf | 공공 문서 |
 | Android for Cars 앱 품질 가이드라인 | https://developer.android.com/docs/quality-guidelines/car-app-quality | — |
 
