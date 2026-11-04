@@ -32,7 +32,6 @@
     <string name="energy_line">주차할 때 배터리 %1$d%% → 지금 %2$d%%</string>
     <string name="all_clear">모두 해결됐어요. 안전 운전하세요.</string>
 
-    <string name="voice_intro">바통입니다. 이전 운전자가 남긴 일이 %1$d가지 있어요.</string>
     <string name="voice_none">바통입니다. 깨끗한 상태로 받으셨어요.</string>
     <string name="voice_resolved">%1$s.</string>
 
@@ -43,7 +42,7 @@
     <string name="done_cabin_light_on">실내등 꺼짐 확인</string>
     <string name="done_low_battery">충전 확인</string>
 
-    <string name="hint_tap_to_ack">항목을 누르면 확인 처리돼요</string>
+    <string name="hint_tap_to_ack">할 일 항목은 눌러서 확인 처리할 수 있어요</string>
     <string name="acknowledged">확인함: %1$s</string>
     <string name="undo">되돌리기</string>
 
@@ -52,7 +51,6 @@
     <string name="energy_charged">주차 중 %1$d%% 충전됨</string>
     <string name="energy_used">주차 중 %1$d%% 줄어듦</string>
     <string name="energy_same">주차 중 변화 없음</string>
-    <string name="voice_depart_safety">안전 항목이 %1$d건 남아 있어요.</string>
 
     <string name="history_button">이력</string>
     <string name="history_title">인계 이력</string>
@@ -65,4 +63,15 @@
 
     <string name="item_brake_fluid_low">브레이크액이 부족해요 — 출발 전에 점검하세요</string>
     <string name="done_brake_fluid_low">브레이크액 정상 확인</string>
+
+    <string name="notif_channel">바통 인계 대기</string>
+    <string name="notif_text">주차할 때 남은 일을 기억했다가 다음 운전자에게 알려 드려요.</string>
+    <string name="parked_hint">지금 해결하면 다음 사람에게 넘어가지 않아요.</string>
+
+    <plurals name="voice_intro">
+        <item quantity="other">바통입니다. 이전 운전자가 남긴 일이 %1$d가지 있어요.</item>
+    </plurals>
+    <plurals name="voice_depart_safety">
+        <item quantity="other">안전 항목이 %1$d건 남아 있어요.</item>
+    </plurals>
 </resources>

@@ -32,7 +32,6 @@
     <string name="energy_line">駐車時のバッテリー %1$d%% → 現在 %2$d%%</string>
     <string name="all_clear">すべて解決しました。安全運転で。</string>
 
-    <string name="voice_intro">バトンです。前のドライバーから%1$d件の引き継ぎがあります。</string>
     <string name="voice_none">バトンです。きれいな状態で受け取りました。</string>
     <string name="voice_resolved">%1$s。</string>
 
@@ -43,7 +42,7 @@
     <string name="done_cabin_light_on">室内灯が消えました</string>
     <string name="done_low_battery">充電を確認</string>
 
-    <string name="hint_tap_to_ack">項目をタップすると確認済みになります</string>
+    <string name="hint_tap_to_ack">やること項目はタップで確認済みにできます</string>
     <string name="acknowledged">確認済み: %1$s</string>
     <string name="undo">元に戻す</string>
 
@@ -52,7 +51,6 @@
     <string name="energy_charged">駐車中に%1$d%%充電されました</string>
     <string name="energy_used">駐車中に%1$d%%減りました</string>
     <string name="energy_same">駐車中の変化なし</string>
-    <string name="voice_depart_safety">安全に関わる項目が%1$d件残っています。</string>
 
     <string name="history_button">履歴</string>
     <string name="history_title">引き継ぎ履歴</string>
@@ -65,4 +63,15 @@
 
     <string name="item_brake_fluid_low">ブレーキ液が不足しています — 出発前に点検してください</string>
     <string name="done_brake_fluid_low">ブレーキ液の正常を確認</string>
+
+    <string name="notif_channel">バトン待機中</string>
+    <string name="notif_text">駐車時に残った項目を覚えて、次のドライバーに伝えます。</string>
+    <string name="parked_hint">今解決すれば次の人には引き継がれません。</string>
+
+    <plurals name="voice_intro">
+        <item quantity="other">バトンです。前のドライバーから%1$d件の引き継ぎがあります。</item>
+    </plurals>
+    <plurals name="voice_depart_safety">
+        <item quantity="other">安全に関わる項目が%1$d件残っています。</item>
+    </plurals>
 </resources>

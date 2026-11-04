@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -32,10 +34,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.baton.app.R
 import com.baton.app.UiState
+import com.baton.app.handover.HandoverMachine
 import com.baton.app.handover.HandoverMachine.State
 import com.baton.app.handover.OpenItem
 import com.baton.app.i18n.ItemText
 import java.util.Locale
+
+/** 차량 화면 최소 터치 영역 (Android for Cars 디자인 기준 76dp) */
+private val TOUCH = 76.dp
 
 private object C {
     val bg = Color(0xFF0E1116)
@@ -52,7 +58,8 @@ private object C {
 fun HandoverScreen(
     ui: UiState,
     onLocale: (Locale) -> Unit,
-    onDiagnostics: () -> Unit,
+    /** null이면 진단 버튼을 숨긴다 (출시 버전) */
+    onDiagnostics: (() -> Unit)?,
     onAcknowledge: (OpenItem) -> Unit = {},
     onUndo: () -> Unit = {},
     onReceive: () -> Unit = {},
@@ -93,45 +100,48 @@ private fun UndoBar(t: ItemText, item: OpenItem, onUndo: () -> Unit, modifier: M
     ) {
         Text(t.str(R.string.acknowledged, t.item(item)), color = C.bg, fontSize = 22.sp)
         Spacer(Modifier.width(24.dp))
-        Text(
-            t.str(R.string.undo), color = Color(0xFF1F6FEB), fontSize = 22.sp, fontWeight = FontWeight.Bold,
-            modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable { onUndo() }.padding(horizontal = 18.dp, vertical = 12.dp),
-        )
+        Box(
+            Modifier.heightIn(min = TOUCH).widthIn(min = TOUCH).clip(RoundedCornerShape(12.dp)).clickable { onUndo() }
+                .padding(horizontal = 20.dp),
+            contentAlignment = Alignment.Center,
+        ) { Text(t.str(R.string.undo), color = Color(0xFF1F6FEB), fontSize = 24.sp, fontWeight = FontWeight.Bold) }
     }
 }
 
 @Composable
-private fun TopBar(t: ItemText, locale: Locale, onLocale: (Locale) -> Unit, onDiagnostics: () -> Unit, onHistory: (() -> Unit)?) {
+private fun TopBar(t: ItemText, locale: Locale, onLocale: (Locale) -> Unit, onDiagnostics: (() -> Unit)?, onHistory: (() -> Unit)?) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(t.str(R.string.app_name), color = C.text, fontSize = 30.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.weight(1f))
         // 이력은 주차 중에만 (주행 중 상세 화면 금지)
         if (onHistory != null) {
-            Text(
-                t.str(R.string.history_button), color = C.text, fontSize = 18.sp, fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(end = 16.dp).clip(RoundedCornerShape(10.dp)).background(C.card)
-                    .clickable { onHistory() }.padding(horizontal = 18.dp, vertical = 10.dp),
-            )
+            Box(
+                Modifier.padding(end = 16.dp).heightIn(min = TOUCH).widthIn(min = TOUCH)
+                    .clip(RoundedCornerShape(14.dp)).background(C.card).clickable { onHistory() }
+                    .padding(horizontal = 22.dp),
+                contentAlignment = Alignment.Center,
+            ) { Text(t.str(R.string.history_button), color = C.text, fontSize = 22.sp, fontWeight = FontWeight.Bold) }
         }
         for (l in ItemText.SUPPORTED) {
             val selected = l.language == locale.language
-            Text(
-                l.language.uppercase(),
-                color = if (selected) C.bg else C.sub,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
+            Box(
+                Modifier
                     .padding(start = 8.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .heightIn(min = TOUCH).widthIn(min = TOUCH)
+                    .clip(RoundedCornerShape(14.dp))
                     .background(if (selected) C.text else C.card)
-                    .clickable { onLocale(l) }
-                    .padding(horizontal = 16.dp, vertical = 10.dp)
-            )
+                    .clickable { onLocale(l) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(l.language.uppercase(), color = if (selected) C.bg else C.sub, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            }
         }
-        Text(
-            "⚙", color = C.sub, fontSize = 22.sp,
-            modifier = Modifier.padding(start = 16.dp).clickable { onDiagnostics() }.padding(8.dp)
-        )
+        if (onDiagnostics != null) {
+            Box(
+                Modifier.padding(start = 8.dp).heightIn(min = TOUCH).widthIn(min = TOUCH).clickable { onDiagnostics() },
+                contentAlignment = Alignment.Center,
+            ) { Text("⚙", color = C.sub, fontSize = 26.sp) }
+        }
     }
 }
 
@@ -151,6 +161,8 @@ private fun Parked(t: ItemText, preview: List<OpenItem>) {
     if (preview.isEmpty()) {
         Text(t.str(R.string.all_clear), color = C.done, fontSize = 28.sp)
     } else {
+        Text(t.str(R.string.parked_hint), color = C.sub, fontSize = 22.sp)
+        Spacer(Modifier.height(16.dp))
         ItemList(t, preview, emptyList())
     }
 }
@@ -165,7 +177,7 @@ private fun Handover(
     onAcknowledge: ((OpenItem) -> Unit)?,
     onReceive: (() -> Unit)?,
 ) {
-    val open = h.open.filter { it.key !in ui.acknowledged }
+    val open = h.visible
     Row(Modifier.fillMaxSize()) {
         Column(Modifier.width(560.dp)) {
             Text(title, color = C.text, fontSize = 40.sp, fontWeight = FontWeight.Bold)
@@ -245,7 +257,8 @@ private fun ItemCard(t: ItemText, item: OpenItem, done: Boolean, onTap: ((OpenIt
             .clip(RoundedCornerShape(20.dp))
             .background(C.card)
             .border(2.dp, accent.copy(alpha = if (done) 0.6f else 0.35f), RoundedCornerShape(20.dp))
-            .then(if (onTap != null) Modifier.clickable { onTap(item) } else Modifier)
+            // 안전 항목은 확인 처리로 숨길 수 없으므로 누를 수 없다 (신호로 해결될 때까지 표시)
+            .then(if (onTap != null && HandoverMachine.canAcknowledge(item)) Modifier.clickable { onTap(item) } else Modifier)
             .padding(horizontal = 28.dp, vertical = 22.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

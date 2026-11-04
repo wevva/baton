@@ -74,6 +74,8 @@ BatonApp · BatonController   앱 수명 동안 차량 연결·상태 유지
 
 ## 빌드와 실행
 
+> 처음이라면 단계별 안내서 [docs/USER_GUIDE.md](docs/USER_GUIDE.md) 를 보세요 (에뮬레이터 켜기 → 시연 → 테스트 → 문제 해결).
+
 - JDK 17 (Android Studio 내장 JDK 25로는 Gradle 8.10이 동작하지 않음)
 - Android SDK Platform 35, Pleos Connect 에뮬레이터(API 34 Automotive)
 

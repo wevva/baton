@@ -296,6 +296,42 @@ class HandoverMachineTest {
         assertEquals(10L, m.history.first().parkedAtMs)
     }
 
+    @Test fun `SM-44 할 일 항목은 확인 처리로 숨길 수 있고 되돌릴 수 있다`() {
+        val m = HandoverMachine(sedan)
+        leave(m)
+        boardSame(m, 5_000)
+        val light = OpenItem(Type.CABIN_LIGHT_ON).key
+        assertTrue(m.acknowledge(light))
+        assertTrue((m.state as State.Boarded).handover.visible.none { it.key == light })
+        assertTrue(m.unacknowledge(light))
+        assertTrue((m.state as State.Boarded).handover.visible.any { it.key == light })
+    }
+
+    @Test fun `SM-45 안전 항목은 확인 처리로 숨길 수 없다`() {
+        val m = HandoverMachine(sedan)
+        leave(m)
+        boardSame(m, 5_000)
+        assertFalse(m.acknowledge(OpenItem(Type.DOORS_UNLOCKED).key))
+        assertTrue((m.state as State.Boarded).handover.visible.any { it.type == Type.DOORS_UNLOCKED })
+    }
+
+    @Test fun `SM-46 탑승 전(Away)·없는 항목은 확인 처리 불가`() {
+        val m = HandoverMachine(sedan)
+        leave(m)
+        assertFalse(m.acknowledge(OpenItem(Type.CABIN_LIGHT_ON).key))
+        boardSame(m, 5_000)
+        assertFalse(m.acknowledge("NOPE:-"))
+    }
+
+    @Test fun `SM-47 확인 처리한 항목이 해결되면 확인 표시도 정리된다`() {
+        val m = HandoverMachine(sedan)
+        leave(m)
+        boardSame(m, 5_000)
+        m.acknowledge(OpenItem(Type.CABIN_LIGHT_ON).key)
+        val b = m.onSnapshot(snap(6_000, locked = false, rearWindow = 4, cabin = false)) as State.Boarded
+        assertTrue(b.handover.acknowledged.isEmpty())
+    }
+
     // ── DT: 탐지 ─────────────────────────────────────────────────
 
     @Test fun `DT-01 프로필에 없는 부위는 보지 않는다`() {

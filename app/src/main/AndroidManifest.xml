@@ -21,6 +21,11 @@
     <!-- Pleos TTS SDK -->
     <uses-permission android:name="pleos.car.permission.TTS_SERVICE" />
 
+    <!-- 앱을 열지 않아도 주차·하차·탑승을 감지: 부팅 시 시작 + 감시 서비스 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
     <application
         android:name=".BatonApp"
         android:allowBackup="false"
@@ -45,5 +50,24 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 보안: 둘 다 외부 공개 안 함. 다른 앱이 호출할 수 없다 -->
+        <service
+            android:name=".HandoverService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Vehicle handover: watches parking, driver exit and boarding signals to hand over unfinished vehicle state to the next driver" />
+        </service>
+
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

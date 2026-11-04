@@ -149,6 +149,45 @@ t12() { # 창문 반쯤 닫기 → 해결 아님
   expect_ui "갱신된 값" "30% 열려"
 }
 
+tap_text() { # 화면에서 해당 문구를 찾아 누른다
+  "$ADB" shell uiautomator dump /sdcard/u.xml >/dev/null
+  local b; b=$("$ADB" shell cat /sdcard/u.xml | grep -o "text=\"$1\"[^>]*bounds=\"[^\"]*\"" | grep -o 'bounds="[^"]*"' | grep -o '[0-9]\+' | tr '\n' ' ')
+  [ -z "$b" ] && return 1
+  set -- $b; "$ADB" shell input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 ))
+}
+
+t13() { # 탔다 내렸다 다시 타도 요약 반복 없음
+  fresh_start
+  vc gear Park; sleep 1; vc cabin true; sleep 1; vc seat driver false; sleep 4
+  vc seat driver true; sleep 3; vc seat driver false; sleep 4; vc seat driver true; sleep 3
+  [ "$(logs | grep -c '안내: 바통입니다')" = "1" ] || { echo "      ✗ 요약 안내 횟수: $(logs | grep -c '안내: 바통입니다')"; return 1; }
+}
+
+t14() { # 안전 항목은 눌러도 숨겨지지 않음
+  fresh_start
+  vc gear Park; sleep 1; vc lock false; sleep 1; vc seat driver false; sleep 4; vc seat driver true; sleep 4
+  tap_text "문이 잠기지 않았어요" || { echo "      ✗ 안전 항목 카드를 찾지 못함"; return 1; }
+  sleep 1
+  expect_ui "안전 항목이 그대로 보임" "문이 잠기지 않았어요" &&
+  ! ui_text | grep -qF "되돌리기" || { echo "      ✗ 안전 항목이 확인 처리됨"; return 1; }
+}
+
+t15() { # 홈으로 나가도 감지 계속 (앱을 열지 않아도 동작)
+  fresh_start
+  "$ADB" shell input keyevent KEYCODE_HOME; sleep 2
+  vc gear Park; sleep 1; vc cabin true; sleep 1; vc seat driver false; sleep 4; vc seat driver true; sleep 4
+  expect_log "백그라운드 하차 기록" "상태: Parked → Away \(남은 일=1\)" &&
+  expect_log "백그라운드 탑승 안내" "안내: 바통입니다. 이전 운전자가 남긴 일이 1가지"
+}
+
+t16() { # 보안: 외부(셸)에서 서비스·수신기 강제 호출 불가
+  local out1 out2
+  out1=$("$ADB" shell am start-foreground-service -n $PKG/.HandoverService 2>&1)
+  out2=$("$ADB" shell am broadcast -n $PKG/.BootReceiver -a android.intent.action.BOOT_COMPLETED 2>&1)
+  echo "$out1" | grep -qiE "security|not exported|denied|requires" || { echo "      ✗ 서비스가 외부에서 시작됨: $out1"; return 1; }
+  echo "$out2" | grep -qiE "security|not exported|denied|protected|requires|result=0" || { echo "      ✗ 수신기 응답: $out2"; return 1; }
+}
+
 run E2E-01 "기본 흐름: 하차 기록 → 탑승 안내 → 하나씩 자동 소거 → 출발" t01
 run E2E-02 "깨끗하게 주차하면 '깨끗한 상태' 안내" t02
 run E2E-03 "동승자가 남은 채 운전 교대해도 인계" t03
@@ -161,6 +200,10 @@ run E2E-09 "탔다가 다시 내리면 같은 인계 유지" t09
 run E2E-10 "저장 파일 변조 시 크래시 없이 무시" t10
 run E2E-11 "주행 중에는 한 줄만, 이력 버튼 숨김" t11
 run E2E-12 "창문 반쯤 닫기는 해결로 치지 않고 값만 갱신" t12
+run E2E-13 "탔다 내렸다 다시 타도 요약 안내 반복 없음" t13
+run E2E-14 "안전 항목은 눌러도 숨겨지지 않음" t14
+run E2E-15 "홈 화면으로 나가도 감지·안내 계속 (앱 안 열어도 동작)" t15
+run E2E-16 "보안: 외부에서 서비스·수신기 강제 호출 불가" t16
 
 echo
 echo "결과: 통과 $PASS / 실패 $FAIL ${FAILED[*]}"

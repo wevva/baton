@@ -31,6 +31,9 @@ class ItemText(
 
     fun str(id: Int, vararg args: Any): String = res.getString(id, *args)
 
+    /** 개수에 따라 단·복수가 바뀌는 문장 (영어 1 item / 2 items 등) */
+    fun plural(id: Int, count: Int, vararg args: Any): String = res.getQuantityString(id, count, *args)
+
     fun item(item: OpenItem): String = when (item.type) {
         OpenItem.Type.DOORS_UNLOCKED -> str(R.string.item_doors_unlocked)
         OpenItem.Type.DOOR_OPEN -> str(R.string.item_door_open, spot(item.spot))

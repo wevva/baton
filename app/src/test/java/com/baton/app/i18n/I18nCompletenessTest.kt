@@ -50,6 +50,27 @@ class I18nCompletenessTest {
         for (tag in listOf("ko", "en", "ja", "zh-CN")) assertTrue("locales_config 에 $tag 없음", cfg.contains("\"$tag\""))
     }
 
+    private fun plurals(dir: String): Map<String, List<String>> {
+        val xml = File(res, "$dir/strings.xml").readText()
+        return Regex("""<plurals name="([^"]+)">(.*?)</plurals>""", RegexOption.DOT_MATCHES_ALL).findAll(xml).associate { m ->
+            m.groupValues[1] to Regex("""<item quantity="[a-z]+">(.*?)</item>""").findAll(m.groupValues[2]).map { it.groupValues[1] }.toList()
+        }
+    }
+
+    @Test fun `I18N-06 복수형 문구도 모든 언어에 있고 자리표시자가 일치한다`() {
+        val base = plurals("values")
+        assertTrue("복수형 문구가 없음", base.isNotEmpty())
+        for (l in locales.drop(1)) {
+            val other = plurals(l)
+            assertTrue("$l 복수형 키 불일치: ${base.keys} vs ${other.keys}", base.keys == other.keys)
+            for ((k, forms) in base) {
+                val expected = placeholders(forms.last())
+                for (f in other.getValue(k)) assertTrue("$l/$k: $expected ≠ ${placeholders(f)}", placeholders(f) == expected)
+                assertTrue("$l/$k 'other' 형태 없음", other.getValue(k).isNotEmpty())
+            }
+        }
+    }
+
     @Test fun `I18N-05 표절 방지 금칙어가 문구에 없다`() {
         val banned = listOf("최초", "세계 유일", "메시지를 남기", "메모장")
         for (l in locales) for ((k, v) in strings(l)) for (b in banned) assertTrue("$l/$k 에 금칙어 '$b'", !v.contains(b))

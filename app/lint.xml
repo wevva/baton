@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Lint 설정: 해당 없는 경고만 사유와 함께 끈다 -->
+<lint>
+    <!-- 제출물은 APK(앱 번들 아님)라 언어별 분할 다운로드가 없다 -->
+    <issue id="AppBundleLocaleChanges" severity="ignore" />
+    <!-- 라이브러리 최신화는 빌드 도구(AGP/Kotlin/compileSdk) 동반 업그레이드가 필요해 마감 후 일괄 진행. 현재 버전에 알려진 보안 취약점 없음 -->
+    <issue id="GradleDependency" severity="informational" />
+    <issue id="AndroidGradlePluginVersion" severity="informational" />
+    <issue id="NewerVersionAvailable" severity="informational" />
+    <!-- 적응형 아이콘은 v26 폴더가 있어야 빌드 도구가 인식한다 (폴더 통합 시 빌드 실패 확인) -->
+    <issue id="ObsoleteSdkInt" severity="ignore" />
+</lint>

@@ -91,4 +91,19 @@ class HandoverCodecTest {
             assertTrue("필드 '$k' 가 저장되면 안 됨", !Regex("\"$k").containsMatchIn(json))
         }
     }
+
+    @Test fun `ST-14 확인 기록이 저장·복원된다`() {
+        val windowKey = OpenItem(Type.WINDOW_OPEN, Spot(2, Spot.Side.LEFT), 40).key
+        val acked = h.copy(acknowledged = setOf(windowKey))
+        val b = HandoverCodec.decode(HandoverCodec.encode(State.Boarded(acked), emptyList()))!!.first as State.Boarded
+        assertEquals(setOf(windowKey), b.handover.acknowledged)
+    }
+
+    @Test fun `ST-15 변조로 안전 항목을 '확인됨'에 넣어 경고를 숨길 수 없다`() {
+        val json = """{"v":1,"state":"boarded","handover":{"parkedAt":1,
+            "open":[{"type":"DOORS_UNLOCKED"},{"type":"CABIN_LIGHT_ON"}],"resolved":[],
+            "ack":["DOORS_UNLOCKED:-","CABIN_LIGHT_ON:-","GHOST:-"]}}"""
+        val b = HandoverCodec.decode(json)!!.first as State.Boarded
+        assertEquals(setOf("CABIN_LIGHT_ON:-"), b.handover.acknowledged)
+    }
 }

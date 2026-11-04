@@ -41,8 +41,12 @@ class HandoverMachine(
         val socAtBoard: Int? = null,
         /** 다음 운전자가 '받았어요'를 누른 시각 (바통 수령증) */
         val receivedAtMs: Long? = null,
+        /** 운전자가 '확인'으로 넘긴 항목 키 (신호로 해결되지 않는 할 일·참고 항목만. 안전 항목은 불가) */
+        val acknowledged: Set<String> = emptySet(),
     ) {
         val allClear: Boolean get() = open.isEmpty()
+        /** 화면에 보여 줄 남은 항목 (확인 처리한 것 제외) */
+        val visible: List<OpenItem> get() = open.filter { it.key !in acknowledged }
     }
 
     var state: State = State.Driving
@@ -110,6 +114,26 @@ class HandoverMachine(
         return state
     }
 
+    /**
+     * 확인 처리: 신호로 해결되지 않는 항목(예: 배터리 부족)을 운전자가 봤다고 표시한다.
+     * **안전 항목은 확인으로 숨길 수 없다** — 신호로 해결될 때까지 보이고, 출발 시 경고된다.
+     * @return 처리됐으면 true
+     */
+    fun acknowledge(key: String): Boolean {
+        val cur = state as? State.Boarded ?: return false
+        val item = cur.handover.open.firstOrNull { it.key == key } ?: return false
+        if (!canAcknowledge(item)) return false
+        state = State.Boarded(cur.handover.copy(acknowledged = cur.handover.acknowledged + key))
+        return true
+    }
+
+    fun unacknowledge(key: String): Boolean {
+        val cur = state as? State.Boarded ?: return false
+        if (key !in cur.handover.acknowledged) return false
+        state = State.Boarded(cur.handover.copy(acknowledged = cur.handover.acknowledged - key))
+        return true
+    }
+
     /** 저장해 둔 상태로 복원 (앱 재시작·차량 전원 off 후) */
     fun restore(saved: State, savedHistory: List<Handover>) {
         state = saved
@@ -141,10 +165,13 @@ class HandoverMachine(
         val openKeys = open.map { it.key }.toSet()
         val newKeys = newlyResolved.map { it.item.key }.toSet()
         val resolved = h.resolved.filter { it.item.key !in newKeys && it.item.key !in openKeys } + newlyResolved
-        return h.copy(open = open, resolved = resolved)
+        // 해결된 항목의 확인 표시는 정리 (같은 항목이 다시 생기면 다시 보이도록)
+        return h.copy(open = open, resolved = resolved, acknowledged = h.acknowledged intersect openKeys)
     }
 
     companion object {
+        fun canAcknowledge(item: OpenItem) = item.type.tier != OpenItem.Tier.SAFETY
+
         private val CAN_APPEAR_WHILE_PARKED = setOf(OpenItem.Type.LOW_BATTERY, OpenItem.Type.BRAKE_FLUID_LOW)
     }
 

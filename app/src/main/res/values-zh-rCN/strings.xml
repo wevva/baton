@@ -32,7 +32,6 @@
     <string name="energy_line">停车时电量 %1$d%% → 当前 %2$d%%</string>
     <string name="all_clear">全部已解决，祝您行车安全。</string>
 
-    <string name="voice_intro">这里是接力。上一位驾驶员留下了%1$d件事项。</string>
     <string name="voice_none">这里是接力。车辆状态良好。</string>
     <string name="voice_resolved">%1$s。</string>
 
@@ -43,7 +42,7 @@
     <string name="done_cabin_light_on">车内灯已关闭</string>
     <string name="done_low_battery">已确认充电</string>
 
-    <string name="hint_tap_to_ack">点击事项即可标记为已确认</string>
+    <string name="hint_tap_to_ack">待办事项可点击标记为已确认</string>
     <string name="acknowledged">已确认：%1$s</string>
     <string name="undo">撤销</string>
 
@@ -52,7 +51,6 @@
     <string name="energy_charged">停车期间充电 %1$d%%</string>
     <string name="energy_used">停车期间减少 %1$d%%</string>
     <string name="energy_same">停车期间无变化</string>
-    <string name="voice_depart_safety">还有 %1$d 项安全事项未处理。</string>
 
     <string name="history_button">记录</string>
     <string name="history_title">交接记录</string>
@@ -65,4 +63,15 @@
 
     <string name="item_brake_fluid_low">制动液不足 — 请在出发前检查</string>
     <string name="done_brake_fluid_low">制动液已恢复正常</string>
+
+    <string name="notif_channel">接力待命中</string>
+    <string name="notif_text">停车时记住未完成的事项，并告知下一位驾驶员。</string>
+    <string name="parked_hint">现在处理就不会交接给下一位。</string>
+
+    <plurals name="voice_intro">
+        <item quantity="other">这里是接力。上一位驾驶员留下了%1$d件事项。</item>
+    </plurals>
+    <plurals name="voice_depart_safety">
+        <item quantity="other">还有 %1$d 项安全事项未处理。</item>
+    </plurals>
 </resources>

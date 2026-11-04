@@ -3,13 +3,6 @@ package com.baton.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import com.baton.app.i18n.AppLanguage
-import com.baton.app.ui.HandoverScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,52 +19,62 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.baton.app.handover.HandoverMachine
+import com.baton.app.i18n.AppLanguage
+import com.baton.app.security.BatonLog
+import com.baton.app.ui.HandoverScreen
+import com.baton.app.ui.HistoryScreen
 
 class MainActivity : ComponentActivity() {
 
-    private val signals = mutableStateMapOf<String, String>()
-    private lateinit var probe: SignalProbe
-    private lateinit var tts: TtsProbe
     private lateinit var controller: BatonController
+
+    // 진단 화면(개발용)은 디버그 빌드에서, 열 때만 만든다 (차량 연결·음성 엔진을 쓸데없이 늘리지 않음)
+    private val signals = mutableStateMapOf<String, String>()
+    private var probe: SignalProbe? = null
+    private var tts: TtsProbe? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val app = application as BatonApp
-        // 진단 화면용 신호 확인기는 화면마다 새로 (차량 연결은 앱이 유지)
-        probe = SignalProbe(this) { name, value -> runOnUiThread { signals[name] = value } }
-        probe.start()
-        tts = TtsProbe(this) { name, value -> runOnUiThread { signals[name] = value } }
-        controller = app.controller
+        controller = (application as BatonApp).controller
         controller.setLocale(AppLanguage.current(this))
+        // 화면을 닫아도 주차·하차·탑승을 계속 감지하도록 감시 서비스 시작
+        HandoverService.start(this)
 
         setContent {
             MaterialTheme(colorScheme = darkColorScheme()) {
                 val ui by controller.ui.collectAsState()
                 var diagnostics by remember { mutableStateOf(false) }
                 var history by remember { mutableStateOf(false) }
-                // 주행 중이면 이력 화면을 닫는다
-                if (history && ui.state is com.baton.app.handover.HandoverMachine.State.Driving) history = false
-                if (history) {
-                    com.baton.app.ui.HistoryScreen(ui.history, onBack = { history = false })
-                } else if (diagnostics) {
-                    ProbeScreen(
+                // 주행 중이면 상세 화면(이력·진단)을 닫는다
+                if (ui.state is HandoverMachine.State.Driving) {
+                    history = false
+                    diagnostics = false
+                }
+                when {
+                    history -> HistoryScreen(ui.history, ui.profile.driverSeat, onBack = { history = false })
+                    diagnostics -> ProbeScreen(
                         signals = signals,
-                        onReadAll = { probe.readAll() },
-                        onSubscribe = { probe.subscribe() },
-                        onSpeak = { tts.speakSample() },
+                        onReadAll = { diagnosticsProbe().readAll() },
+                        onSubscribe = { diagnosticsProbe().subscribe() },
+                        onSpeak = { diagnosticsTts().speakSample() },
                         onBack = { diagnostics = false },
                     )
-                } else {
-                    HandoverScreen(
+                    else -> HandoverScreen(
                         ui,
                         // 실제 반영은 onConfigurationChanged에서 (언어 변경은 비동기로 적용됨)
                         onLocale = { l -> AppLanguage.set(this, l) },
-                        onDiagnostics = { diagnostics = true },
+                        onDiagnostics = if (BatonLog.enabled) ({ diagnostics = true }) else null,
                         onAcknowledge = controller::acknowledge,
                         onUndo = controller::undo,
                         onReceive = controller::receive,
@@ -82,18 +85,27 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun diagnosticsProbe(): SignalProbe = probe ?: SignalProbe(this) { name, value ->
+        runOnUiThread { signals[name] = value }
+    }.also { it.start(); probe = it }
+
+    private fun diagnosticsTts(): TtsProbe = tts ?: TtsProbe(this) { name, value ->
+        runOnUiThread { signals[name] = value }
+    }.also { tts = it }
+
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
         super.onConfigurationChanged(newConfig)
         controller.setLocale(newConfig.locales[0])
     }
 
     override fun onDestroy() {
-        tts.release()
-        probe.stop()
+        tts?.release()
+        probe?.stop()
         super.onDestroy()
     }
 }
 
+/** 개발용 진단 화면 (디버그 빌드에서만 진입 가능) */
 @Composable
 private fun ProbeScreen(signals: Map<String, String>, onReadAll: () -> Unit, onSubscribe: () -> Unit, onSpeak: () -> Unit, onBack: () -> Unit) {
     Column(

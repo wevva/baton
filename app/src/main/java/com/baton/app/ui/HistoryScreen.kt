@@ -3,7 +3,10 @@ package com.baton.app.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,15 +31,16 @@ import androidx.compose.ui.unit.sp
 import com.baton.app.R
 import com.baton.app.handover.HandoverMachine.Handover
 import com.baton.app.i18n.ItemText
+import com.baton.app.vehicle.Spot
 import java.text.DateFormat
 import java.util.Date
 
 /** 인계 이력 (구독 '플러스' 등급의 핵심 화면). 주차 중에만 연다. */
 @Composable
-fun HistoryScreen(history: List<Handover>, onBack: () -> Unit) {
+fun HistoryScreen(history: List<Handover>, driverSeat: Spot, onBack: () -> Unit) {
     val config = LocalConfiguration.current
     val ctx = LocalContext.current
-    val t = remember(config) { ItemText(ctx, config.locales[0]) }
+    val t = remember(config, driverSeat) { ItemText(ctx, config.locales[0], driverSeat) }
     val dt = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, t.locale)
     val time = DateFormat.getTimeInstance(DateFormat.SHORT, t.locale)
     Column(
@@ -45,11 +49,12 @@ fun HistoryScreen(history: List<Handover>, onBack: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(t.str(R.string.history_title), color = Color(0xFFF2F4F7), fontSize = 36.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.weight(1f))
-            Text(
-                t.str(R.string.back), color = Color(0xFF0E1116), fontSize = 22.sp, fontWeight = FontWeight.Bold,
-                modifier = Modifier.clip(RoundedCornerShape(14.dp)).background(Color(0xFFF2F4F7))
-                    .clickable { onBack() }.padding(horizontal = 28.dp, vertical = 14.dp),
-            )
+            // 차량 화면 최소 터치 영역 76dp
+            Box(
+                Modifier.heightIn(min = 76.dp).widthIn(min = 76.dp).clip(RoundedCornerShape(14.dp))
+                    .background(Color(0xFFF2F4F7)).clickable { onBack() }.padding(horizontal = 32.dp),
+                contentAlignment = Alignment.Center,
+            ) { Text(t.str(R.string.back), color = Color(0xFF0E1116), fontSize = 24.sp, fontWeight = FontWeight.Bold) }
         }
         Spacer(Modifier.height(24.dp))
         if (history.isEmpty()) {

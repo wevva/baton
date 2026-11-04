@@ -22,7 +22,7 @@
 ## 2. 설계상 보안 원칙
 
 1. **읽기 전용 — 차량 조작 기능 자체가 없다.** `CONTROL_*` 권한을 요청하지 않으며, 제어 API를 호출하는 코드가 없다. 따라서 바통을 통해 차량이 움직이거나 문이 열리는 경로가 구조적으로 존재하지 않는다(심층 방어의 첫 겹).
-2. **최소 권한.** 필요한 읽기 권한 7종 + 음성 1종 + 운전석 위치 1종만 쓴다. 인터넷 권한은 라이브러리가 넣더라도 최종 앱에서 제거한다.
+2. **최소 권한.** 필요한 읽기 권한 7종 + 음성 1종 + 운전석 위치 1종 + 자동 시작(부팅 수신·포그라운드 서비스)만 쓴다. 인터넷 권한은 라이브러리가 넣더라도 최종 앱에서 제거한다.
 3. **오프라인·차량 내부 보관.** 서버로 보내지 않는다. 클라우드 백업·기기 간 이전도 막는다.
 4. **최소 수집.** 위치·속도·경로·얼굴·음성·차대번호(VIN)·운전자 이름을 수집·저장하지 않는다. 운전자 신원을 비교하지 않는다.
 5. **저장 파일은 신뢰하지 않는다.** 암호화·변조 감지 후에도 내용을 검증한다.
@@ -42,6 +42,10 @@
 | CODE | release에서 로그 완전 차단 (`BatonLog` + R8 규칙 이중) | `security/BatonLog.kt` | release 실행 시 앱 로그 0줄 |
 | NETWORK | 인터넷 권한 제거, 평문(HTTP) 금지·사용자 설치 인증서 불신 설정(향후 대비) | 매니페스트, `xml/network_security_config.xml` | 병합 매니페스트에 INTERNET 없음 |
 | PLATFORM | 외부 공개 컴포넌트: 실행 화면 1개 + 시스템 전용 수신기 1개(`DUMP` 권한 보호, AndroidX 기본) | 병합 매니페스트 | 확인 |
+| PLATFORM | 감시 서비스·부팅 수신기 **외부 공개 안 함**(exported=false): 다른 앱·셸이 호출 불가 | `AndroidManifest.xml` | E2E-16: `Requires permission not exported` |
+| PLATFORM | 알림 탭 PendingIntent는 변경 불가(FLAG_IMMUTABLE) | `HandoverService` | 코드 검토 |
+| PLATFORM | 진단(개발) 화면은 디버그 빌드에서만 | `MainActivity` | release 화면 확인 |
+| SAFETY | **안전 항목은 확인 처리로 숨길 수 없음** (신호로 해결될 때만 사라짐). 저장 파일 변조로 숨기는 것도 차단 | `HandoverMachine.canAcknowledge`, `HandoverCodec` | 단위 SM-45, ST-17 / E2E-14 |
 | PLATFORM | release는 디버그 불가 → `run-as`로 앱 폴더 접근 불가 | 기본 | 확인 ("package not debuggable") |
 | RESILIENCE | 서명 키 4096비트 RSA, 저장소 밖 보관, 비밀번호 무작위 32자 | `C:/dev/keys` | — |
 | 공급망 | Gradle 배포판 SHA-256 고정, wrapper jar 공식 체크섬 일치 확인, JDK·Gradle 다운로드 시 SHA-256 검증 | `gradle-wrapper.properties` | 확인 |

@@ -33,7 +33,6 @@
     <string name="energy_line">Battery %1$d%% when parked → %2$d%% now</string>
     <string name="all_clear">All clear. Have a good drive.</string>
 
-    <string name="voice_intro">Baton here. The previous driver left %1$d open items.</string>
     <string name="voice_none">Baton here. Everything was left in good shape.</string>
     <string name="voice_resolved">%1$s.</string>
 
@@ -44,7 +43,7 @@
     <string name="done_cabin_light_on">Cabin light off</string>
     <string name="done_low_battery">Charging confirmed</string>
 
-    <string name="hint_tap_to_ack">Tap an item to mark it as checked</string>
+    <string name="hint_tap_to_ack">Tap a to-do item to mark it as checked</string>
     <string name="acknowledged">Checked: %1$s</string>
     <string name="undo">Undo</string>
 
@@ -53,7 +52,6 @@
     <string name="energy_charged">+%1$d%% charged while parked</string>
     <string name="energy_used">%1$d%% used while parked</string>
     <string name="energy_same">No change while parked</string>
-    <string name="voice_depart_safety">%1$d safety items still open.</string>
 
     <string name="history_button">History</string>
     <string name="history_title">Handover history</string>
@@ -66,4 +64,17 @@
 
     <string name="item_brake_fluid_low">Brake fluid is low — check before driving</string>
     <string name="done_brake_fluid_low">Brake fluid OK</string>
+
+    <string name="notif_channel">Baton standby</string>
+    <string name="notif_text">Remembers what is left when you park and tells the next driver.</string>
+    <string name="parked_hint">Fix it now and it will not be handed over.</string>
+
+    <plurals name="voice_intro">
+        <item quantity="one">Baton here. The previous driver left %1$d open item.</item>
+        <item quantity="other">Baton here. The previous driver left %1$d open items.</item>
+    </plurals>
+    <plurals name="voice_depart_safety">
+        <item quantity="one">%1$d safety item is still open.</item>
+        <item quantity="other">%1$d safety items are still open.</item>
+    </plurals>
 </resources>

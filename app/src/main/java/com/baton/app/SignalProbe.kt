@@ -75,9 +75,6 @@ class SignalProbe(context: Context, private val onUpdate: (String, String) -> Un
         guard("운전석 창문 위치") {
             vehicle.getWindow().getCurrentWindowPosition(WindowArea(WindowValue.ROW_1_LEFT), { report("운전석 창문 위치", "$it") }, { fail("운전석 창문 위치", it) })
         }
-        guard("타이어 공기압(앞왼)") {
-            vehicle.getTire().getTirePressure(WheelArea(WheelValue.LEFT_FRONT), { report("타이어 공기압(앞왼)", "$it") }, { fail("타이어 공기압(앞왼)", it) })
-        }
         guard("타이어 저압 기준(앞왼)") {
             vehicle.getTire().getLowTirePressure(WheelArea(WheelValue.LEFT_FRONT), { report("타이어 저압 기준(앞왼)", "$it") }, { fail("타이어 저압 기준(앞왼)", it) })
         }
@@ -98,9 +95,6 @@ class SignalProbe(context: Context, private val onUpdate: (String, String) -> Un
         }
         guard("워셔액 부족") {
             vehicle.getSafety().hasLowWasherFluidWarning({ report("워셔액 부족", "$it") }, { fail("워셔액 부족", it) })
-        }
-        guard("경고등") {
-            vehicle.getSafety().getTelltalesInfo({ report("경고등", it?.toString() ?: "null") }, { fail("경고등", it) })
         }
         guard("실내등") {
             vehicle.getLight().getCurrentCabinLightState({ report("실내등", it?.name ?: "null") }, { fail("실내등", it) })

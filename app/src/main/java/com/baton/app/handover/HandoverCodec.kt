@@ -47,6 +47,7 @@ object HandoverCodec {
         .putOpt("socAtPark", h.socAtPark)
         .putOpt("socAtBoard", h.socAtBoard)
         .putOpt("receivedAt", h.receivedAtMs)
+        .put("ack", JSONArray(h.acknowledged.toList()))
         .put("open", JSONArray(h.open.map { enc(it) }))
         .put("resolved", JSONArray(h.resolved.map { JSONObject().put("item", enc(it.item)).put("at", it.atMs) }))
 
@@ -54,12 +55,22 @@ object HandoverCodec {
 
     private fun decHandover(o: JSONObject?): Handover? {
         if (o == null || !o.has("parkedAt")) return null
+        val h = decHandoverRaw(o)
+        // 보안: 변조로 안전 항목을 '확인됨'에 넣어 경고를 숨기는 것을 막는다 (남은 항목 중 확인 가능한 것만 인정)
+        val ackable = h.open.filter { HandoverMachine.canAcknowledge(it) }.map { it.key }.toSet()
+        return h.copy(acknowledged = h.acknowledged intersect ackable)
+    }
+
+    private fun decHandoverRaw(o: JSONObject): Handover {
         return Handover(
             parkedAtMs = o.getLong("parkedAt"),
             socAtPark = o.percentOrNull("socAtPark"),
             socAtBoard = o.percentOrNull("socAtBoard"),
             receivedAtMs = if (o.has("receivedAt") && !o.isNull("receivedAt")) o.getLong("receivedAt") else null,
             open = o.optJSONArray("open").items { decItem(it) }.distinctBy { it.key },
+            acknowledged = o.optJSONArray("ack").let { a ->
+                if (a == null) emptySet() else (0 until minOf(a.length(), MAX_ITEMS)).mapNotNull { a.optString(it).takeIf { s -> s.length in 1..32 } }.toSet()
+            },
             resolved = o.optJSONArray("resolved").items { r ->
                 decItem(r.optJSONObject("item"))?.let { Resolved(it, r.optLong("at")) }
             }.distinctBy { it.item.key },

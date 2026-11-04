@@ -50,7 +50,13 @@ class SecureFile(private val file: File, private val keyAlias: String = DEFAULT_
 
     private fun key(): SecretKey {
         val ks = KeyStore.getInstance(KEYSTORE).apply { load(null) }
-        (ks.getKey(keyAlias, null) as? SecretKey)?.let { return it }
+        try {
+            (ks.getKey(keyAlias, null) as? SecretKey)?.let { return it }
+        } catch (e: Exception) {
+            // 키가 손상·무효화된 경우(시스템 업데이트 등): 폐기하고 새로 만든다.
+            // 이전 기록은 읽을 수 없게 되지만(read → null) 앱은 계속 동작한다.
+            runCatching { ks.deleteEntry(keyAlias) }
+        }
         val gen = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE)
         gen.init(
             KeyGenParameterSpec.Builder(keyAlias, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
