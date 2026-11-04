@@ -3,6 +3,10 @@ package com.baton.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.lifecycle.lifecycleScope
+import com.baton.app.vehicle.ProfileDiscovery
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -36,6 +40,14 @@ class MainActivity : ComponentActivity() {
         probe = SignalProbe(this) { name, value -> runOnUiThread { signals[name] = value } }
         probe.start()
         tts = TtsProbe(this) { name, value -> runOnUiThread { signals[name] = value } }
+        lifecycleScope.launch {
+            delay(500) // SDK 서비스 연결 대기
+            val r = ProfileDiscovery(probe.vehicle).discover()
+            val p = r.profile
+            signals["차량 프로필"] = "${p.rows}열 · 좌석 ${p.seatCount} · 문 ${p.doors.size} · 창문 ${p.windows.size} · 트렁크 ${p.hasTrunk}"
+            signals["차량 VIN"] = r.vin ?: "없음"
+            signals["차량 기능 목록"] = "${r.rawCapabilityKeys.size}개"
+        }
 
         setContent {
             MaterialTheme(colorScheme = darkColorScheme()) {

@@ -22,7 +22,7 @@ import android.util.Log
  */
 class SignalProbe(context: Context, private val onUpdate: (String, String) -> Unit) {
 
-    private val vehicle = Vehicle(context.applicationContext)
+    val vehicle = Vehicle(context.applicationContext)
     private val driverDoor = DoorArea(DoorValue.ROW_1_LEFT)
     // 에뮬레이터 DOOR_LOCK은 4개 문을 합친 단일 영역(0x55)만 지원
     private val allDoors = DoorArea(DoorValue.ROW_1_LEFT, DoorValue.ROW_1_RIGHT, DoorValue.ROW_2_LEFT, DoorValue.ROW_2_RIGHT)
