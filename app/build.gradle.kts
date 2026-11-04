@@ -64,3 +64,11 @@ dependencies {
 
     testImplementation("junit:junit:4.13.2")
 }
+
+// 제출 규격: apk/팀명_앱이름_release.apk (팀명: 바통랩)
+val submitApk by tasks.registering(Copy::class) {
+    from(layout.buildDirectory.file("outputs/apk/release/app-release.apk"))
+    into(rootProject.layout.projectDirectory.dir("apk"))
+    rename { "바통랩_바통_release.apk" }
+}
+afterEvaluate { tasks.named("assembleRelease") { finalizedBy(submitApk) } }
