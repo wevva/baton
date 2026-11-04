@@ -4,18 +4,10 @@
 
     <string name="state_driving">走行中</string>
     <string name="state_parked">駐車中</string>
-    <string name="state_away">次のドライバーへの引き継ぎを保存しました</string>
-    <string name="state_boarded">引き継ぎ事項</string>
 
     <string name="tier_safety">安全</string>
     <string name="tier_todo">やること</string>
     <string name="tier_info">参考</string>
-
-    <string name="item_doors_unlocked">ドアがロックされていません</string>
-    <string name="item_door_open">%1$sのドアが開いています</string>
-    <string name="item_trunk_open">トランクが開いています</string>
-    <string name="item_window_open">%1$sの窓が%2$d%%開いています</string>
-    <string name="item_cabin_light_on">室内灯がついています</string>
     <string name="item_low_battery">バッテリー残量が少なくなっています (%1$d%%)</string>
 
     <string name="spot_driver">運転席</string>
@@ -28,21 +20,10 @@
     <string name="side_right">右</string>
 
     <string name="resolved">解決済み</string>
-    <string name="empty_handover">引き継ぎ事項はありません。きれいな状態で受け取りました。</string>
     <string name="energy_line">駐車時のバッテリー %1$d%% → 現在 %2$d%%</string>
     <string name="all_clear">すべて解決しました。安全運転で。</string>
-
-    <string name="voice_none">バトンです。きれいな状態で受け取りました。</string>
     <string name="voice_resolved">%1$s。</string>
-
-    <string name="done_doors_unlocked">ドアロックを確認</string>
-    <string name="done_door_open">%1$sのドアが閉まりました</string>
-    <string name="done_trunk_open">トランクが閉まりました</string>
-    <string name="done_window_open">%1$sの窓が閉まりました</string>
-    <string name="done_cabin_light_on">室内灯が消えました</string>
     <string name="done_low_battery">充電を確認</string>
-
-    <string name="hint_tap_to_ack">やること項目はタップで確認済みにできます</string>
     <string name="acknowledged">確認済み: %1$s</string>
     <string name="undo">元に戻す</string>
 
@@ -66,12 +47,77 @@
 
     <string name="notif_channel">バトン待機中</string>
     <string name="notif_text">駐車時に残った項目を覚えて、次のドライバーに伝えます。</string>
-    <string name="parked_hint">今解決すれば次の人には引き継がれません。</string>
-
-    <plurals name="voice_intro">
-        <item quantity="other">バトンです。前のドライバーから%1$d件の引き継ぎがあります。</item>
-    </plurals>
     <plurals name="voice_depart_safety">
         <item quantity="other">安全に関わる項目が%1$d件残っています。</item>
+    </plurals>
+
+    <string name="item_warning_on">%1$s警告灯が点灯しています</string>
+    <string name="item_setting">%1$sの状態で引き継ぎました</string>
+    <string name="item_engine_oil_low">エンジンオイルが不足しています — 出発前に点検してください</string>
+    <string name="item_transmission_oil_low">トランスミッションオイルの点検が必要です</string>
+    <string name="item_washer_low">ウォッシャー液が不足しています</string>
+    <string name="done_warning">%1$s警告灯の消灯を確認</string>
+    <string name="done_warning_trip">%1$sを確認しました</string>
+    <string name="done_setting">%1$sの解除を確認</string>
+    <string name="done_engine_oil">エンジンオイル正常を確認</string>
+    <string name="done_transmission_oil">トランスミッションオイル正常を確認</string>
+    <string name="done_washer">ウォッシャー液の補充を確認</string>
+    <string name="tt_ABS">ABS</string>
+    <string name="tt_RBS">回生ブレーキ</string>
+    <string name="tt_ESC">横滑り防止装置(ESC)</string>
+    <string name="tt_ELECTRONIC_PARKING_BRAKE">電動パーキングブレーキ</string>
+    <string name="tt_MDPS">電動パワーステアリング</string>
+    <string name="tt_LED_HEADLAMP">LEDヘッドランプ</string>
+    <string name="tt_AFS">アダプティブヘッドランプ</string>
+    <string name="tt_TPMS">タイヤ空気圧</string>
+    <string name="tt_AIRBAG">エアバッグ</string>
+    <string name="tt_EMERGENCY_CALL">緊急通報</string>
+    <string name="tt_MASTER_WARNING">マスターウォーニング</string>
+    <string name="tt_ENGINE">エンジン警告</string>
+    <string name="tt_ENGINE_OIL_PRESSURE">油圧</string>
+    <string name="tt_ENGINE_TEMPERATURE">水温</string>
+    <string name="tt_EV_SYSTEM">EVシステム</string>
+    <string name="tt_HEV_SYSTEM">ハイブリッドシステム</string>
+    <string name="tt_FCEV_SYSTEM">燃料電池システム</string>
+    <string name="tt_EREV_SYSTEM">レンジエクステンダー</string>
+    <string name="tt_LOW_VOLT_BATTERY">12Vバッテリー</string>
+    <string name="tt_POWER_DOWN">出力制限</string>
+    <string name="tt_H2_LEAK">水素漏れ</string>
+    <string name="tt_H2_SENSOR">水素センサー</string>
+    <string name="tt_PARTICLE_FILTER">粒子フィルター</string>
+    <string name="tt_SCR">排気浄化(SCR)</string>
+    <string name="tt_WATER_SEPARATOR">燃料水分離器</string>
+    <string name="tt_IMMOBILIZER">イモビライザー</string>
+    <string name="tt_ESC_OFF">横滑り防止装置(ESC)オフ</string>
+    <string name="tt_PASSENGER_AIRBAG_OFF">助手席エアバッグオフ</string>
+    <string name="tt_CHILD_PRESENCE_DETECTION_OFF">後席乗員検知オフ</string>
+    <string name="tt_I_PEDAL">i-Pedal(ワンペダル)オン</string>
+    <string name="tt_CREEP_OFF">クリープオフ</string>
+    <string name="tt_TOW_MODE">トーイングモード</string>
+    <string name="tt_ESC_SPORT">ESCスポーツモード</string>
+    <string name="tt_DRIVE_MODE_SPORT">スポーツモード</string>
+    <string name="tt_DRIFT_MODE">ドリフトモード</string>
+    <string name="tt_TRACK_MODE">トラックモード</string>
+    <string name="tt_LAUNCH_MODE">ローンチモード</string>
+    <string name="tt_FOUR_WHEEL_DRIVE_MODE_4L">4WDロー(4L)</string>
+    <plurals name="item_warning_on_trip">
+        <item quantity="other">%1$s警告灯が点灯しています(前回の走行中%2$d回)</item>
+    </plurals>
+    <plurals name="item_warning_trip">
+        <item quantity="other">前回の走行中に%1$s警告灯が%2$d回点灯しました — 出発前に点検してください</item>
+    </plurals>
+    <plurals name="voice_more">
+        <item quantity="other">ほか%1$d件あります。</item>
+    </plurals>
+
+    <string name="state_boarded">出発前の確認事項</string>
+    <string name="state_away">次の走行への引き継ぎを保存しました</string>
+    <string name="empty_handover">引き継ぎ事項はありません。前回の走行で異常はありませんでした。</string>
+    <string name="voice_none">バトンです。前回の走行から引き継ぐことはありません。</string>
+    <string name="hint_tap_to_ack">確認した項目はタップで消せます(点灯中の安全警告を除く)</string>
+    <string name="parked_hint">今降りると次の走行にこう伝わります:</string>
+    <string name="preview_setting">%1$s — 降りる前に戻せます</string>
+    <plurals name="voice_intro">
+        <item quantity="other">バトンです。出発前に確認していただきたいことが%1$d件あります。</item>
     </plurals>
 </resources>

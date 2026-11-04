@@ -34,24 +34,35 @@ class ItemText(
     /** 개수에 따라 단·복수가 바뀌는 문장 (영어 1 item / 2 items 등) */
     fun plural(id: Int, count: Int, vararg args: Any): String = res.getQuantityString(id, count, *args)
 
+    /** 경고등·설정 이름 (모르는 코드면 코드 그대로) */
+    fun name(code: String?): String = code?.let { c -> TelltaleNames.res(c)?.let { str(it) } ?: c } ?: ""
+
     fun item(item: OpenItem): String = when (item.type) {
-        OpenItem.Type.DOORS_UNLOCKED -> str(R.string.item_doors_unlocked)
-        OpenItem.Type.DOOR_OPEN -> str(R.string.item_door_open, spot(item.spot))
-        OpenItem.Type.TRUNK_OPEN -> str(R.string.item_trunk_open)
+        OpenItem.Type.WARNING_ON -> item.value?.takeIf { it > 0 }
+            ?.let { n -> plural(R.plurals.item_warning_on_trip, n, name(item.code), n) }
+            ?: str(R.string.item_warning_on, name(item.code))
+        OpenItem.Type.WARNING_DURING_TRIP -> (item.value ?: 1).let { n -> plural(R.plurals.item_warning_trip, n, name(item.code), n) }
+        OpenItem.Type.SETTING_CHANGED -> str(R.string.item_setting, name(item.code))
         OpenItem.Type.BRAKE_FLUID_LOW -> str(R.string.item_brake_fluid_low)
-        OpenItem.Type.WINDOW_OPEN -> str(R.string.item_window_open, spot(item.spot), item.value ?: 0)
-        OpenItem.Type.CABIN_LIGHT_ON -> str(R.string.item_cabin_light_on)
+        OpenItem.Type.ENGINE_OIL_LOW -> str(R.string.item_engine_oil_low)
+        OpenItem.Type.TRANSMISSION_OIL_LOW -> str(R.string.item_transmission_oil_low)
+        OpenItem.Type.WASHER_FLUID_LOW -> str(R.string.item_washer_low)
         OpenItem.Type.LOW_BATTERY -> str(R.string.item_low_battery, item.value ?: 0)
     }
 
-    /** 해결 순간의 짧은 완료 문구 (예: "운전석 창문 닫힘 확인") */
+    /** 주차 중(내리기 전) 미리보기 문구: 떠나는 사람 시점. 설정은 '되돌릴 수 있어요' */
+    fun preview(item: OpenItem): String =
+        if (item.type == OpenItem.Type.SETTING_CHANGED) str(R.string.preview_setting, name(item.code)) else item(item)
+
+    /** 해결 순간의 짧은 완료 문구 (예: "타이어 공기압 경고등 꺼짐 확인") */
     fun done(item: OpenItem): String = when (item.type) {
-        OpenItem.Type.DOORS_UNLOCKED -> str(R.string.done_doors_unlocked)
-        OpenItem.Type.DOOR_OPEN -> str(R.string.done_door_open, spot(item.spot))
-        OpenItem.Type.TRUNK_OPEN -> str(R.string.done_trunk_open)
+        OpenItem.Type.WARNING_ON -> str(R.string.done_warning, name(item.code))
+        OpenItem.Type.WARNING_DURING_TRIP -> str(R.string.done_warning_trip, name(item.code))
+        OpenItem.Type.SETTING_CHANGED -> str(R.string.done_setting, name(item.code))
         OpenItem.Type.BRAKE_FLUID_LOW -> str(R.string.done_brake_fluid_low)
-        OpenItem.Type.WINDOW_OPEN -> str(R.string.done_window_open, spot(item.spot))
-        OpenItem.Type.CABIN_LIGHT_ON -> str(R.string.done_cabin_light_on)
+        OpenItem.Type.ENGINE_OIL_LOW -> str(R.string.done_engine_oil)
+        OpenItem.Type.TRANSMISSION_OIL_LOW -> str(R.string.done_transmission_oil)
+        OpenItem.Type.WASHER_FLUID_LOW -> str(R.string.done_washer)
         OpenItem.Type.LOW_BATTERY -> str(R.string.done_low_battery)
     }
 

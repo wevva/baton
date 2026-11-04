@@ -99,7 +99,7 @@ class BatonController(
     private suspend fun discoverWithRetry(): VehicleProfile {
         repeat(MAX_DISCOVERY_TRIES) { attempt ->
             val p = ProfileDiscovery(vehicle, context).discover().profile
-            val found = p.seats.isNotEmpty() || p.doors.isNotEmpty() || p.hasDoorLock || p.windows.isNotEmpty()
+            val found = p.seats.isNotEmpty() || p.hasDoorLock || p.hasTelltales || p.hasBatterySoc
             if (found) return p
             BatonLog.w(TAG, "차량 구성 인식 실패 (${attempt + 1}/$MAX_DISCOVERY_TRIES) → 재시도")
             delay(2_000)
@@ -114,8 +114,8 @@ class BatonController(
             snapshot = snap,
             state = after,
             history = m.history.reversed(),
-            // 주차 중 미리보기: 앉아 있을 때 정상인 '잠금 해제·문 열림'은 빼고 보여 준다
-            preview = if (after is State.Parked) detector.detect(profile, snap).filter { it.type !in PREVIEW_HIDDEN } else emptyList(),
+            // 주차 중 미리보기: 지금 내리면 다음 사람에게 넘어갈 것 (예: ESC 꺼짐 → 내리기 전에 되돌릴 수 있음)
+            preview = if (after is State.Parked) detector.detect(profile, snap) else emptyList(),
             undoable = if (after is State.Boarded) _ui.value.undoable else null,
         )
         if (before::class != after::class) {
@@ -177,14 +177,21 @@ class BatonController(
             val msg = when (e) {
                 is Announcer.Event.Intro ->
                     if (e.open.isEmpty()) text.str(R.string.voice_none)
-                    else text.plural(R.plurals.voice_intro, e.open.size, e.open.size) + " " + e.open.joinToString(". ") { text.item(it) }
+                    else text.plural(R.plurals.voice_intro, e.open.size, e.open.size) + " " + spoken(text, e.open)
                 is Announcer.Event.Resolved -> text.str(R.string.voice_resolved, text.done(e.item))
                 is Announcer.Event.DepartWithSafety ->
-                    text.plural(R.plurals.voice_depart_safety, e.items.size, e.items.size) + " " + e.items.joinToString(". ") { text.item(it) }
+                    text.plural(R.plurals.voice_depart_safety, e.items.size, e.items.size) + " " + spoken(text, e.items)
             }
             BatonLog.i(TAG, "안내: $msg")
             speaker.say(msg, locale)
         }
+    }
+
+    /** 음성은 짧게: 앞의 3건만 읽고 나머지는 "외 N건" (운전석 음성 피로 방지) */
+    private fun spoken(text: ItemText, items: List<OpenItem>): String {
+        val head = items.take(3).joinToString(". ") { text.item(it) }
+        val rest = items.size - 3
+        return if (rest > 0) head + ". " + text.plural(R.plurals.voice_more, rest, rest) else head
     }
 
     fun stop() {
@@ -198,6 +205,5 @@ class BatonController(
         /** 되돌리기 가능 시간. 차 안에서는 손이 늦을 수 있어 일반 앱(약 5초)보다 길게 */
         const val UNDO_WINDOW_MS = 8_000L
         private const val MAX_DISCOVERY_TRIES = 30
-        private val PREVIEW_HIDDEN = setOf(OpenItem.Type.DOORS_UNLOCKED, OpenItem.Type.DOOR_OPEN)
     }
 }

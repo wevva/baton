@@ -5,18 +5,10 @@
 
     <string name="state_driving">Driving</string>
     <string name="state_parked">Parked</string>
-    <string name="state_away">Saved for the next driver</string>
-    <string name="state_boarded">Handed over to you</string>
 
     <string name="tier_safety">Safety</string>
     <string name="tier_todo">To do</string>
     <string name="tier_info">Note</string>
-
-    <string name="item_doors_unlocked">Doors are unlocked</string>
-    <string name="item_door_open">%1$s door is open</string>
-    <string name="item_trunk_open">Trunk is open</string>
-    <string name="item_window_open">%1$s window is %2$d%% open</string>
-    <string name="item_cabin_light_on">Cabin light is on</string>
     <string name="item_low_battery">Battery is low (%1$d%%)</string>
 
     <string name="spot_driver">Driver</string>
@@ -29,21 +21,10 @@
     <string name="side_right">right</string>
 
     <string name="resolved">Resolved</string>
-    <string name="empty_handover">Nothing to pick up — the car was left in good shape.</string>
     <string name="energy_line">Battery %1$d%% when parked → %2$d%% now</string>
     <string name="all_clear">All clear. Have a good drive.</string>
-
-    <string name="voice_none">Baton here. Everything was left in good shape.</string>
     <string name="voice_resolved">%1$s.</string>
-
-    <string name="done_doors_unlocked">Doors locked</string>
-    <string name="done_door_open">%1$s door closed</string>
-    <string name="done_trunk_open">Trunk closed</string>
-    <string name="done_window_open">%1$s window closed</string>
-    <string name="done_cabin_light_on">Cabin light off</string>
     <string name="done_low_battery">Charging confirmed</string>
-
-    <string name="hint_tap_to_ack">Tap a to-do item to mark it as checked</string>
     <string name="acknowledged">Checked: %1$s</string>
     <string name="undo">Undo</string>
 
@@ -67,14 +48,82 @@
 
     <string name="notif_channel">Baton standby</string>
     <string name="notif_text">Remembers what is left when you park and tells the next driver.</string>
-    <string name="parked_hint">Fix it now and it will not be handed over.</string>
-
-    <plurals name="voice_intro">
-        <item quantity="one">Baton here. The previous driver left %1$d open item.</item>
-        <item quantity="other">Baton here. The previous driver left %1$d open items.</item>
-    </plurals>
     <plurals name="voice_depart_safety">
         <item quantity="one">%1$d safety item is still open.</item>
         <item quantity="other">%1$d safety items are still open.</item>
+    </plurals>
+
+    <string name="item_warning_on">%1$s warning light is on</string>
+    <string name="item_setting">Handed over with %1$s</string>
+    <string name="item_engine_oil_low">Engine oil is low — check before driving</string>
+    <string name="item_transmission_oil_low">Transmission oil needs checking</string>
+    <string name="item_washer_low">Washer fluid is low</string>
+    <string name="done_warning">%1$s warning off</string>
+    <string name="done_warning_trip">%1$s noted</string>
+    <string name="done_setting">%1$s cleared</string>
+    <string name="done_engine_oil">Engine oil OK</string>
+    <string name="done_transmission_oil">Transmission oil OK</string>
+    <string name="done_washer">Washer fluid refilled</string>
+    <string name="tt_ABS">ABS</string>
+    <string name="tt_RBS">Regenerative braking</string>
+    <string name="tt_ESC">Stability control (ESC)</string>
+    <string name="tt_ELECTRONIC_PARKING_BRAKE">Electronic parking brake</string>
+    <string name="tt_MDPS">Power steering (MDPS)</string>
+    <string name="tt_LED_HEADLAMP">LED headlamp</string>
+    <string name="tt_AFS">Adaptive headlamp (AFS)</string>
+    <string name="tt_TPMS">Tire pressure</string>
+    <string name="tt_AIRBAG">Airbag</string>
+    <string name="tt_EMERGENCY_CALL">Emergency call</string>
+    <string name="tt_MASTER_WARNING">Master warning</string>
+    <string name="tt_ENGINE">Check engine</string>
+    <string name="tt_ENGINE_OIL_PRESSURE">Engine oil pressure</string>
+    <string name="tt_ENGINE_TEMPERATURE">Engine temperature</string>
+    <string name="tt_EV_SYSTEM">EV system</string>
+    <string name="tt_HEV_SYSTEM">Hybrid system</string>
+    <string name="tt_FCEV_SYSTEM">Fuel cell system</string>
+    <string name="tt_EREV_SYSTEM">Range extender system</string>
+    <string name="tt_LOW_VOLT_BATTERY">12V battery</string>
+    <string name="tt_POWER_DOWN">Reduced power</string>
+    <string name="tt_H2_LEAK">Hydrogen leak</string>
+    <string name="tt_H2_SENSOR">Hydrogen sensor</string>
+    <string name="tt_PARTICLE_FILTER">Particulate filter</string>
+    <string name="tt_SCR">Exhaust treatment (SCR)</string>
+    <string name="tt_WATER_SEPARATOR">Fuel water separator</string>
+    <string name="tt_IMMOBILIZER">Immobilizer</string>
+    <string name="tt_ESC_OFF">Stability control (ESC) off</string>
+    <string name="tt_PASSENGER_AIRBAG_OFF">Passenger airbag off</string>
+    <string name="tt_CHILD_PRESENCE_DETECTION_OFF">Rear occupant detection off</string>
+    <string name="tt_I_PEDAL">i-Pedal (one-pedal driving) on</string>
+    <string name="tt_CREEP_OFF">Creep off</string>
+    <string name="tt_TOW_MODE">Tow mode</string>
+    <string name="tt_ESC_SPORT">ESC sport mode</string>
+    <string name="tt_DRIVE_MODE_SPORT">Sport drive mode</string>
+    <string name="tt_DRIFT_MODE">Drift mode</string>
+    <string name="tt_TRACK_MODE">Track mode</string>
+    <string name="tt_LAUNCH_MODE">Launch mode</string>
+    <string name="tt_FOUR_WHEEL_DRIVE_MODE_4L">4WD low (4L)</string>
+    <plurals name="item_warning_on_trip">
+        <item quantity="one">%1$s warning light is on (came on %2$d time last trip)</item>
+        <item quantity="other">%1$s warning light is on (came on %2$d times last trip)</item>
+    </plurals>
+    <plurals name="item_warning_trip">
+        <item quantity="one">%1$s warning came on %2$d time during the last trip — check before driving</item>
+        <item quantity="other">%1$s warning came on %2$d times during the last trip — check before driving</item>
+    </plurals>
+    <plurals name="voice_more">
+        <item quantity="one">and %1$d more.</item>
+        <item quantity="other">and %1$d more.</item>
+    </plurals>
+
+    <string name="state_boarded">Before you drive</string>
+    <string name="state_away">Saved for the next drive</string>
+    <string name="empty_handover">Nothing to pass on — no issues on the last drive.</string>
+    <string name="voice_none">Baton here. Nothing to pass on from the last drive.</string>
+    <string name="hint_tap_to_ack">Tap an item you have checked to clear it (warnings that are still on stay)</string>
+    <string name="parked_hint">If you leave now, the next driver will be told:</string>
+    <string name="preview_setting">%1$s — you can switch it back before leaving</string>
+    <plurals name="voice_intro">
+        <item quantity="one">Baton here. There is %1$d thing to know before you drive.</item>
+        <item quantity="other">Baton here. There are %1$d things to know before you drive.</item>
     </plurals>
 </resources>

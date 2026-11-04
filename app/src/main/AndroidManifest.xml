@@ -8,11 +8,11 @@
          Pleos Vehicle Service 읽기 권한 (protectionLevel=normal) -->
     <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />
     <uses-permission android:name="pleos.car.permission.CAR_DOORS" />
-    <uses-permission android:name="pleos.car.permission.CAR_WINDOWS" />
     <uses-permission android:name="pleos.car.permission.CAR_ENERGY" />
-    <uses-permission android:name="pleos.car.permission.CAR_LIGHTS" />
     <uses-permission android:name="pleos.car.permission.CAR_SAFETY" />
     <uses-permission android:name="pleos.car.permission.CAR_SEATS" />
+    <!-- 경고등(telltale) 읽기: Pleos가 normal 등급으로 제공(시스템 전용 아님). 지원·허용되지 않는 차량에서는 기능이 자동으로 꺼진다 -->
+    <uses-permission android:name="pleos.car.permission.PRIVATE_CAR_SAFETY" />
     <!-- AAOS 표준: 운전석 위치(좌·우핸들) 읽기. protectionLevel=normal -->
     <uses-permission android:name="android.car.permission.CAR_INFO" />
 

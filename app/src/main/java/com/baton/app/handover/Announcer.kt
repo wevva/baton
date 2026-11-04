@@ -35,8 +35,11 @@ class Announcer {
             after.handover.resolved.filter { (it.item.key to it.atMs) !in old }.forEach { events += Event.Resolved(it.item) }
         }
         if (before is State.Boarded && after is State.Driving) {
-            // 안전 항목은 확인 처리로 숨길 수 없으므로 남은 안전 항목은 모두 경고
-            val safety = before.handover.open.filter { it.type.tier == OpenItem.Tier.SAFETY }
+            // 지금 켜진 안전 항목은 확인 처리로 숨길 수 없으므로 모두 경고. '지난 운행 중' 기록은 확인했으면 생략
+            val h = before.handover
+            val safety = h.open.filter {
+                it.tier == OpenItem.Tier.SAFETY && (it.type != OpenItem.Type.WARNING_DURING_TRIP || it.key !in h.acknowledged)
+            }
             if (safety.isNotEmpty()) events += Event.DepartWithSafety(safety)
         }
         return events

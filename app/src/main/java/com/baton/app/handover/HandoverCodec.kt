@@ -51,7 +51,7 @@ object HandoverCodec {
         .put("open", JSONArray(h.open.map { enc(it) }))
         .put("resolved", JSONArray(h.resolved.map { JSONObject().put("item", enc(it.item)).put("at", it.atMs) }))
 
-    private fun enc(i: OpenItem) = JSONObject().put("type", i.type.name).putOpt("spot", i.spot?.code).putOpt("value", i.value)
+    private fun enc(i: OpenItem) = JSONObject().put("type", i.type.name).putOpt("spot", i.spot?.code).putOpt("value", i.value).putOpt("code", i.code)
 
     private fun decHandover(o: JSONObject?): Handover? {
         if (o == null || !o.has("parkedAt")) return null
@@ -83,7 +83,15 @@ object HandoverCodec {
         val type = runCatching { OpenItem.Type.valueOf(o.getString("type")) }.getOrNull() ?: return null
         val spot = if (o.has("spot")) Spot.fromCode(o.optString("spot")) ?: return null else null
         val value = if (o.has("value") && !o.isNull("value")) o.optInt("value").coerceIn(0, 100) else null
-        return OpenItem(type, spot, value)
+        // 경고등·설정 코드는 분류표에 있는 것만 인정 (모르는 코드·기록 금지 신호는 버림)
+        val needsCode = type == OpenItem.Type.WARNING_ON || type == OpenItem.Type.WARNING_DURING_TRIP || type == OpenItem.Type.SETTING_CHANGED
+        val code = if (o.has("code") && !o.isNull("code")) o.optString("code") else null
+        if (needsCode) {
+            val spec = code?.let { Telltales.spec(it) } ?: return null
+            val expectSetting = type == OpenItem.Type.SETTING_CHANGED
+            if ((spec.kind == Telltales.Kind.SETTING) != expectSetting) return null
+        } else if (code != null) return null
+        return OpenItem(type, spot, value, code)
     }
 
     private fun <T> JSONArray?.items(map: (JSONObject) -> T?): List<T> {

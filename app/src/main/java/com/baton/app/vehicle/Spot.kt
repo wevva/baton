@@ -21,17 +21,18 @@ data class Spot(val row: Int, val side: Side) {
 
 /** 차량별로 자동 수집한 구성. 하드코딩된 차종 정보 없이 SDK 기능 확인 결과로만 만든다. */
 data class VehicleProfile(
-    val doors: List<Spot> = emptyList(),
-    val windows: Map<Spot, Int> = emptyMap(),   // 창문 위치 → 최대값(완전 열림)
     val seats: List<Spot> = emptyList(),
     val hasDoorLock: Boolean = false,
-    val hasCabinLight: Boolean = false,
     val hasBatterySoc: Boolean = false,
-    val hasTrunk: Boolean = false,
     val hasBrakeFluid: Boolean = false,
+    val hasEngineOil: Boolean = false,
+    val hasTransmissionOil: Boolean = false,
+    val hasWasherFluid: Boolean = false,
+    /** 경고등 정보를 읽을 수 있는지 (PRIVATE_CAR_SAFETY 권한 + 차량 지원) */
+    val hasTelltales: Boolean = false,
     /** 운전석 위치. 좌핸들 1열 왼쪽, 우핸들 1열 오른쪽 */
     val driverSeat: Spot = Spot(1, Spot.Side.LEFT),
 ) {
-    val rows: Int get() = (seats.map { it.row } + doors.map { it.row }).maxOrNull() ?: 0
+    val rows: Int get() = seats.maxOfOrNull { it.row } ?: 0
     val seatCount: Int get() = seats.size
 }

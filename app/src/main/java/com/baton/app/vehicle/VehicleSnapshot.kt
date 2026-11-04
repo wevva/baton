@@ -3,20 +3,21 @@ package com.baton.app.vehicle
 /** 어느 한 순간의 차량 상태. 알 수 없는 값은 null (지원 안 하는 신호 포함). */
 data class VehicleSnapshot(
     val gear: Gear = Gear.UNKNOWN,
+    /** 착석 센서 없는 차에서 하차·탑승 판단에만 쓴다 (다음 운전자에게 '잠금' 자체는 넘기지 않음) */
     val doorsLocked: Boolean? = null,
-    val doorOpen: Map<Spot, Boolean> = emptyMap(),
-    val trunkOpen: Boolean? = null,
-    val windowPos: Map<Spot, Int> = emptyMap(),
     val seatOccupied: Map<Spot, Boolean> = emptyMap(),
-    val cabinLightOn: Boolean? = null,
     val batterySoc: Int? = null,
-    /** 브레이크액 부족(LOW·CRITICALLY_LOW)이면 true, 정상이면 false, 모르면 null */
+    /** 소모품 부족: true=부족, false=정상, null=모름 */
     val brakeFluidLow: Boolean? = null,
+    val engineOilLow: Boolean? = null,
+    val transmissionOilLow: Boolean? = null,
+    val washerFluidLow: Boolean? = null,
+    /** 켜져 있는(ON·깜빡임) 경고등 이름 집합 (Pleos TelltaleType 이름). null = 아직 모름 */
+    val telltalesOn: Set<String>? = null,
     val timestampMs: Long = 0L,
 ) {
     enum class Gear { PARK, REVERSE, NEUTRAL, DRIVE, UNKNOWN }
 
-    val driverSeated: Boolean? get() = seatOccupied[DRIVER_SEAT]
     val anyoneSeated: Boolean get() = seatOccupied.values.any { it }
 
     /** 착석 센서 값이 하나라도 들어왔는지. 모르는 상태를 '아무도 없음'으로 오해하지 않기 위함 */

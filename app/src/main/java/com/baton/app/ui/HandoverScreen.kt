@@ -163,7 +163,7 @@ private fun Parked(t: ItemText, preview: List<OpenItem>) {
     } else {
         Text(t.str(R.string.parked_hint), color = C.sub, fontSize = 22.sp)
         Spacer(Modifier.height(16.dp))
-        ItemList(t, preview, emptyList())
+        ItemList(t, preview, emptyList(), preview = true)
     }
 }
 
@@ -229,26 +229,26 @@ private fun Handover(
 }
 
 @Composable
-private fun ItemList(t: ItemText, open: List<OpenItem>, resolved: List<OpenItem>, onTap: ((OpenItem) -> Unit)? = null) {
+private fun ItemList(t: ItemText, open: List<OpenItem>, resolved: List<OpenItem>, onTap: ((OpenItem) -> Unit)? = null, preview: Boolean = false) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         // 같은 키가 두 번 들어오면 Compose가 종료되므로 화면에서도 한 번 더 중복 제거 (이중 방어)
-        items(open.distinctBy { it.key }, key = { "o" + it.key }) { ItemCard(t, it, done = false, onTap = onTap) }
+        items(open.distinctBy { it.key }, key = { "o" + it.key }) { ItemCard(t, it, done = false, onTap = onTap, preview = preview) }
         items(resolved.distinctBy { it.key }, key = { "r" + it.key }) { ItemCard(t, it, done = true, onTap = null) }
     }
 }
 
 @Composable
-private fun ItemCard(t: ItemText, item: OpenItem, done: Boolean, onTap: ((OpenItem) -> Unit)?) {
+private fun ItemCard(t: ItemText, item: OpenItem, done: Boolean, onTap: ((OpenItem) -> Unit)?, preview: Boolean = false) {
     val accent = when {
         done -> C.done
-        item.type.tier == OpenItem.Tier.SAFETY -> C.safety
-        item.type.tier == OpenItem.Tier.TODO -> C.todo
+        item.tier == OpenItem.Tier.SAFETY -> C.safety
+        item.tier == OpenItem.Tier.TODO -> C.todo
         else -> C.info
     }
     // 색 + 기호 + 문구 3중 표시 (색각 이상 사용자 고려)
     val symbol = when {
         done -> "✓"
-        item.type.tier == OpenItem.Tier.SAFETY -> "!"
+        item.tier == OpenItem.Tier.SAFETY -> "!"
         else -> "•"
     }
     Row(
@@ -269,12 +269,12 @@ private fun ItemCard(t: ItemText, item: OpenItem, done: Boolean, onTap: ((OpenIt
         Spacer(Modifier.width(24.dp))
         Column(Modifier.weight(1f)) {
             Text(
-                if (done) t.done(item) else t.item(item),
+                when { done -> t.done(item); preview -> t.preview(item); else -> t.item(item) },
                 color = if (done) C.done else C.text, fontSize = 30.sp, fontWeight = FontWeight.SemiBold,
             )
         }
         Text(
-            if (done) t.str(R.string.resolved) else t.tier(item.type.tier),
+            if (done) t.str(R.string.resolved) else t.tier(item.tier),
             color = accent, fontSize = 20.sp, fontWeight = FontWeight.Bold,
         )
     }

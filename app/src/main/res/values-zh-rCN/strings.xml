@@ -4,18 +4,10 @@
 
     <string name="state_driving">行驶中</string>
     <string name="state_parked">已停车</string>
-    <string name="state_away">已为下一位驾驶员保存交接事项</string>
-    <string name="state_boarded">交接事项</string>
 
     <string name="tier_safety">安全</string>
     <string name="tier_todo">待办</string>
     <string name="tier_info">参考</string>
-
-    <string name="item_doors_unlocked">车门未上锁</string>
-    <string name="item_door_open">%1$s车门未关</string>
-    <string name="item_trunk_open">后备箱未关</string>
-    <string name="item_window_open">%1$s车窗打开了%2$d%%</string>
-    <string name="item_cabin_light_on">车内灯未关</string>
     <string name="item_low_battery">电量不足 (%1$d%%)</string>
 
     <string name="spot_driver">驾驶位</string>
@@ -28,21 +20,10 @@
     <string name="side_right">右侧</string>
 
     <string name="resolved">已解决</string>
-    <string name="empty_handover">没有需要交接的事项，车辆状态良好。</string>
     <string name="energy_line">停车时电量 %1$d%% → 当前 %2$d%%</string>
     <string name="all_clear">全部已解决，祝您行车安全。</string>
-
-    <string name="voice_none">这里是接力。车辆状态良好。</string>
     <string name="voice_resolved">%1$s。</string>
-
-    <string name="done_doors_unlocked">车门已上锁</string>
-    <string name="done_door_open">%1$s车门已关闭</string>
-    <string name="done_trunk_open">后备箱已关闭</string>
-    <string name="done_window_open">%1$s车窗已关闭</string>
-    <string name="done_cabin_light_on">车内灯已关闭</string>
     <string name="done_low_battery">已确认充电</string>
-
-    <string name="hint_tap_to_ack">待办事项可点击标记为已确认</string>
     <string name="acknowledged">已确认：%1$s</string>
     <string name="undo">撤销</string>
 
@@ -66,12 +47,77 @@
 
     <string name="notif_channel">接力待命中</string>
     <string name="notif_text">停车时记住未完成的事项，并告知下一位驾驶员。</string>
-    <string name="parked_hint">现在处理就不会交接给下一位。</string>
-
-    <plurals name="voice_intro">
-        <item quantity="other">这里是接力。上一位驾驶员留下了%1$d件事项。</item>
-    </plurals>
     <plurals name="voice_depart_safety">
         <item quantity="other">还有 %1$d 项安全事项未处理。</item>
+    </plurals>
+
+    <string name="item_warning_on">%1$s警告灯亮起</string>
+    <string name="item_setting">以%1$s状态交接</string>
+    <string name="item_engine_oil_low">机油不足 — 请在出发前检查</string>
+    <string name="item_transmission_oil_low">需要检查变速箱油</string>
+    <string name="item_washer_low">玻璃水不足</string>
+    <string name="done_warning">%1$s警告灯已熄灭</string>
+    <string name="done_warning_trip">已确认%1$s</string>
+    <string name="done_setting">%1$s已解除</string>
+    <string name="done_engine_oil">机油已恢复正常</string>
+    <string name="done_transmission_oil">变速箱油已恢复正常</string>
+    <string name="done_washer">玻璃水已补充</string>
+    <string name="tt_ABS">ABS</string>
+    <string name="tt_RBS">再生制动系统</string>
+    <string name="tt_ESC">车身稳定控制(ESC)</string>
+    <string name="tt_ELECTRONIC_PARKING_BRAKE">电子驻车制动</string>
+    <string name="tt_MDPS">电动助力转向</string>
+    <string name="tt_LED_HEADLAMP">LED大灯</string>
+    <string name="tt_AFS">自适应大灯</string>
+    <string name="tt_TPMS">胎压</string>
+    <string name="tt_AIRBAG">安全气囊</string>
+    <string name="tt_EMERGENCY_CALL">紧急呼叫</string>
+    <string name="tt_MASTER_WARNING">主警告</string>
+    <string name="tt_ENGINE">发动机故障</string>
+    <string name="tt_ENGINE_OIL_PRESSURE">机油压力</string>
+    <string name="tt_ENGINE_TEMPERATURE">冷却液温度</string>
+    <string name="tt_EV_SYSTEM">电动车系统</string>
+    <string name="tt_HEV_SYSTEM">混合动力系统</string>
+    <string name="tt_FCEV_SYSTEM">燃料电池系统</string>
+    <string name="tt_EREV_SYSTEM">增程系统</string>
+    <string name="tt_LOW_VOLT_BATTERY">12V蓄电池</string>
+    <string name="tt_POWER_DOWN">动力限制</string>
+    <string name="tt_H2_LEAK">氢气泄漏</string>
+    <string name="tt_H2_SENSOR">氢气传感器</string>
+    <string name="tt_PARTICLE_FILTER">颗粒过滤器</string>
+    <string name="tt_SCR">尾气处理(SCR)</string>
+    <string name="tt_WATER_SEPARATOR">燃油水分离器</string>
+    <string name="tt_IMMOBILIZER">防盗锁止</string>
+    <string name="tt_ESC_OFF">车身稳定控制(ESC)关闭</string>
+    <string name="tt_PASSENGER_AIRBAG_OFF">副驾驶安全气囊关闭</string>
+    <string name="tt_CHILD_PRESENCE_DETECTION_OFF">后排乘员检测关闭</string>
+    <string name="tt_I_PEDAL">i-Pedal单踏板驾驶开启</string>
+    <string name="tt_CREEP_OFF">蠕行关闭</string>
+    <string name="tt_TOW_MODE">拖车模式</string>
+    <string name="tt_ESC_SPORT">ESC运动模式</string>
+    <string name="tt_DRIVE_MODE_SPORT">运动驾驶模式</string>
+    <string name="tt_DRIFT_MODE">漂移模式</string>
+    <string name="tt_TRACK_MODE">赛道模式</string>
+    <string name="tt_LAUNCH_MODE">弹射起步模式</string>
+    <string name="tt_FOUR_WHEEL_DRIVE_MODE_4L">四驱低速(4L)</string>
+    <plurals name="item_warning_on_trip">
+        <item quantity="other">%1$s警告灯亮起(上次行驶中%2$d次)</item>
+    </plurals>
+    <plurals name="item_warning_trip">
+        <item quantity="other">上次行驶中%1$s警告灯亮起%2$d次 — 请在出发前检查</item>
+    </plurals>
+    <plurals name="voice_more">
+        <item quantity="other">另有%1$d项。</item>
+    </plurals>
+
+    <string name="state_boarded">出发前须知</string>
+    <string name="state_away">已保存给下次行驶的交接</string>
+    <string name="empty_handover">没有需要交接的事项，上次行驶无异常。</string>
+    <string name="voice_none">这里是接力。上次行驶没有需要交接的事项。</string>
+    <string name="hint_tap_to_ack">已确认的事项可点击移除(仍亮起的安全警告除外)</string>
+    <string name="parked_hint">现在下车将向下次行驶转达:</string>
+    <string name="preview_setting">%1$s — 下车前可恢复</string>
+    <plurals name="voice_intro">
+        <item quantity="other">这里是接力。出发前有%1$d项需要了解。</item>
     </plurals>
 </resources>
