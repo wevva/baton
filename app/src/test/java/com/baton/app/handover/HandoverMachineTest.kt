@@ -26,7 +26,7 @@ class HandoverMachineTest {
         rearWindow: Int = 0, cabin: Boolean = false, soc: Int = 62, t: Long = 0,
     ) = VehicleSnapshot(
         gear = gear, doorsLocked = locked, windowPos = mapOf(driver to 0, rearLeft to rearWindow),
-        seatOccupied = mapOf(driver to seated), cabinLightOn = cabin, batterySoc = soc, timestampMs = t,
+        seatOccupied = sedan.seats.associateWith { false } + (driver to seated), cabinLightOn = cabin, batterySoc = soc, timestampMs = t,
     )
 
     @Test fun 하차하면_미해결_항목을_기억한다() {
@@ -87,6 +87,20 @@ class HandoverMachineTest {
         assertEquals(4, van.rows)
         val items = Detector().detect(van, VehicleSnapshot(windowPos = mapOf(Spot(3, Side.RIGHT) to 5)))
         assertEquals("R3R", items.single().spot?.code)
+    }
+
+    @Test fun 좌석_값을_모르면_하차로_판단하지_않는다() {
+        val m = HandoverMachine(sedan)
+        m.onSnapshot(VehicleSnapshot(gear = Gear.DRIVE))
+        val s = m.onSnapshot(VehicleSnapshot(gear = Gear.PARK, doorsLocked = false)) // 착석 값 아직 없음
+        assertEquals(State.Parked, s)
+    }
+
+    @Test fun 일부_좌석만_알면_하차로_판단하지_않는다() {
+        val m = HandoverMachine(sedan)
+        m.onSnapshot(VehicleSnapshot(gear = Gear.PARK))
+        val s = m.onSnapshot(VehicleSnapshot(gear = Gear.PARK, seatOccupied = mapOf(rearLeft to false)))
+        assertEquals(State.Parked, s)
     }
 
     @Test fun 위치코드는_왕복_변환된다() {

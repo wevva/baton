@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 시스템 설정 '앱 언어'에 표시할 언어 목록. 언어 추가 시 values-xx와 함께 여기에도 한 줄 -->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="ko" />
+    <locale android:name="en" />
+    <locale android:name="ja" />
+    <locale android:name="zh-CN" />
+</locale-config>

@@ -47,7 +47,7 @@ class HandoverMachine(
             State.Driving -> if (parked) State.Parked else cur
             State.Parked -> when {
                 !parked -> State.Driving
-                hasOccupancy() && !s.anyoneSeated -> State.Away(
+                hasOccupancy() && allSeatsKnown(s) && !s.anyoneSeated -> State.Away(
                     Handover(parkedAtMs = s.timestampMs, socAtPark = s.batterySoc, open = detector.detect(profile, s))
                 )
                 else -> cur
@@ -79,4 +79,7 @@ class HandoverMachine(
 
     /** 착석 센서가 없는 차는 "모두 하차"를 알 수 없으므로 P단 + 도어 잠금으로 대신 판단할 여지를 남긴다 */
     private fun hasOccupancy() = profile.seats.isNotEmpty()
+
+    /** 프로필의 모든 좌석 값이 들어와야 '모두 하차'를 판단한다 (일부만 알면 판단 보류) */
+    private fun allSeatsKnown(s: VehicleSnapshot) = profile.seats.all { it in s.seatOccupied }
 }

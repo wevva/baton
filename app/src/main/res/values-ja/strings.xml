@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">バトン</string>
+
+    <string name="state_driving">走行中</string>
+    <string name="state_parked">駐車中</string>
+    <string name="state_away">次のドライバーへの引き継ぎを保存しました</string>
+    <string name="state_boarded">引き継ぎ事項</string>
+
+    <string name="tier_safety">安全</string>
+    <string name="tier_todo">やること</string>
+    <string name="tier_info">参考</string>
+
+    <string name="item_doors_unlocked">ドアがロックされていません</string>
+    <string name="item_door_open">%1$sのドアが開いています</string>
+    <string name="item_trunk_open">トランクが開いています</string>
+    <string name="item_window_open">%1$sの窓が%2$d%%開いています</string>
+    <string name="item_cabin_light_on">室内灯がついています</string>
+    <string name="item_low_battery">バッテリー残量が少なくなっています (%1$d%%)</string>
+
+    <string name="spot_driver">運転席</string>
+    <string name="spot_front_passenger">助手席</string>
+    <string name="spot_rear_left">後部座席左</string>
+    <string name="spot_rear_right">後部座席右</string>
+    <string name="spot_row_side">%1$d列目%2$s</string>
+    <string name="side_left">左</string>
+    <string name="side_center">中央</string>
+    <string name="side_right">右</string>
+
+    <string name="resolved">解決済み</string>
+    <string name="empty_handover">引き継ぎ事項はありません。きれいな状態で受け取りました。</string>
+    <string name="energy_line">駐車時のバッテリー %1$d%% → 現在 %2$d%%</string>
+    <string name="all_clear">すべて解決しました。安全運転で。</string>
+
+    <string name="voice_intro">バトンです。前のドライバーから%1$d件の引き継ぎがあります。</string>
+    <string name="voice_none">バトンです。きれいな状態で受け取りました。</string>
+    <string name="voice_resolved">%1$s。</string>
+
+    <string name="done_doors_unlocked">ドアロックを確認</string>
+    <string name="done_door_open">%1$sのドアが閉まりました</string>
+    <string name="done_trunk_open">トランクが閉まりました</string>
+    <string name="done_window_open">%1$sの窓が閉まりました</string>
+    <string name="done_cabin_light_on">室内灯が消えました</string>
+    <string name="done_low_battery">充電を確認</string>
+</resources>

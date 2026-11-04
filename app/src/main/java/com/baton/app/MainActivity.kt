@@ -3,10 +3,13 @@ package com.baton.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.lifecycle.lifecycleScope
-import com.baton.app.vehicle.ProfileDiscovery
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.baton.app.i18n.AppLanguage
+import com.baton.app.ui.HandoverScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -34,31 +37,45 @@ class MainActivity : ComponentActivity() {
     private val signals = mutableStateMapOf<String, String>()
     private lateinit var probe: SignalProbe
     private lateinit var tts: TtsProbe
+    private lateinit var controller: BatonController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val app = application as BatonApp
+        // 진단 화면용 신호 확인기는 화면마다 새로 (차량 연결은 앱이 유지)
         probe = SignalProbe(this) { name, value -> runOnUiThread { signals[name] = value } }
         probe.start()
         tts = TtsProbe(this) { name, value -> runOnUiThread { signals[name] = value } }
-        lifecycleScope.launch {
-            delay(500) // SDK 서비스 연결 대기
-            val r = ProfileDiscovery(probe.vehicle).discover()
-            val p = r.profile
-            signals["차량 프로필"] = "${p.rows}열 · 좌석 ${p.seatCount} · 문 ${p.doors.size} · 창문 ${p.windows.size} · 트렁크 ${p.hasTrunk}"
-            signals["차량 VIN"] = r.vin ?: "없음"
-            signals["차량 기능 목록"] = "${r.rawCapabilityKeys.size}개"
-        }
+        controller = app.controller
+        controller.setLocale(AppLanguage.current(this))
 
         setContent {
             MaterialTheme(colorScheme = darkColorScheme()) {
-                ProbeScreen(
-                    signals = signals,
-                    onReadAll = { probe.readAll() },
-                    onSubscribe = { probe.subscribe() },
-                    onSpeak = { tts.speakSample() },
-                )
+                val ui by controller.ui.collectAsState()
+                var diagnostics by remember { mutableStateOf(false) }
+                if (diagnostics) {
+                    ProbeScreen(
+                        signals = signals,
+                        onReadAll = { probe.readAll() },
+                        onSubscribe = { probe.subscribe() },
+                        onSpeak = { tts.speakSample() },
+                        onBack = { diagnostics = false },
+                    )
+                } else {
+                    HandoverScreen(
+                        ui,
+                        // 실제 반영은 onConfigurationChanged에서 (언어 변경은 비동기로 적용됨)
+                        onLocale = { l -> AppLanguage.set(this, l) },
+                        onDiagnostics = { diagnostics = true },
+                    )
+                }
             }
         }
+    }
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        controller.setLocale(newConfig.locales[0])
     }
 
     override fun onDestroy() {
@@ -69,19 +86,20 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun ProbeScreen(signals: Map<String, String>, onReadAll: () -> Unit, onSubscribe: () -> Unit, onSpeak: () -> Unit) {
+private fun ProbeScreen(signals: Map<String, String>, onReadAll: () -> Unit, onSubscribe: () -> Unit, onSpeak: () -> Unit, onBack: () -> Unit) {
     Column(
         Modifier
             .fillMaxSize()
             .background(Color(0xFF101418))
             .padding(32.dp)
     ) {
-        Text("바통 · 차량 신호 확인", fontSize = 32.sp, color = Color.White)
+        Text("진단 · 차량 신호 확인", fontSize = 32.sp, color = Color.White)
         Spacer(Modifier.padding(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Button(onClick = onReadAll) { Text("전체 읽기", fontSize = 22.sp) }
             Button(onClick = onSubscribe) { Text("실시간 구독", fontSize = 22.sp) }
             Button(onClick = onSpeak) { Text("음성 테스트", fontSize = 22.sp) }
+            Button(onClick = onBack) { Text("닫기", fontSize = 22.sp) }
         }
         Spacer(Modifier.padding(8.dp))
         LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {

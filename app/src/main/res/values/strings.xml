@@ -1,3 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 기본(영어). 지원하지 않는 언어 사용자에게 보이는 문구 -->
 <resources>
-    <string name="app_name">바통</string>
+    <string name="app_name">Baton</string>
+
+    <string name="state_driving">Driving</string>
+    <string name="state_parked">Parked</string>
+    <string name="state_away">Saved for the next driver</string>
+    <string name="state_boarded">Handed over to you</string>
+
+    <string name="tier_safety">Safety</string>
+    <string name="tier_todo">To do</string>
+    <string name="tier_info">Note</string>
+
+    <string name="item_doors_unlocked">Doors are unlocked</string>
+    <string name="item_door_open">%1$s door is open</string>
+    <string name="item_trunk_open">Trunk is open</string>
+    <string name="item_window_open">%1$s window is %2$d%% open</string>
+    <string name="item_cabin_light_on">Cabin light is on</string>
+    <string name="item_low_battery">Battery is low (%1$d%%)</string>
+
+    <string name="spot_driver">Driver</string>
+    <string name="spot_front_passenger">Front passenger</string>
+    <string name="spot_rear_left">Rear left</string>
+    <string name="spot_rear_right">Rear right</string>
+    <string name="spot_row_side">Row %1$d %2$s</string>
+    <string name="side_left">left</string>
+    <string name="side_center">center</string>
+    <string name="side_right">right</string>
+
+    <string name="resolved">Resolved</string>
+    <string name="empty_handover">Nothing to pick up — the car was left in good shape.</string>
+    <string name="energy_line">Battery %1$d%% when parked → %2$d%% now</string>
+    <string name="all_clear">All clear. Have a good drive.</string>
+
+    <string name="voice_intro">Baton here. The previous driver left %1$d open items.</string>
+    <string name="voice_none">Baton here. Everything was left in good shape.</string>
+    <string name="voice_resolved">%1$s.</string>
+
+    <string name="done_doors_unlocked">Doors locked</string>
+    <string name="done_door_open">%1$s door closed</string>
+    <string name="done_trunk_open">Trunk closed</string>
+    <string name="done_window_open">%1$s window closed</string>
+    <string name="done_cabin_light_on">Cabin light off</string>
+    <string name="done_low_battery">Charging confirmed</string>
 </resources>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">바통</string>
+
+    <string name="state_driving">주행 중</string>
+    <string name="state_parked">주차됨</string>
+    <string name="state_away">다음 운전자에게 넘길 준비 완료</string>
+    <string name="state_boarded">이어받은 일</string>
+
+    <string name="tier_safety">안전</string>
+    <string name="tier_todo">할 일</string>
+    <string name="tier_info">참고</string>
+
+    <string name="item_doors_unlocked">문이 잠기지 않았어요</string>
+    <string name="item_door_open">%1$s 문이 열려 있어요</string>
+    <string name="item_trunk_open">트렁크가 열려 있어요</string>
+    <string name="item_window_open">%1$s 창문이 %2$d%% 열려 있어요</string>
+    <string name="item_cabin_light_on">실내등이 켜져 있어요</string>
+    <string name="item_low_battery">배터리가 부족해요 (%1$d%%)</string>
+
+    <string name="spot_driver">운전석</string>
+    <string name="spot_front_passenger">조수석</string>
+    <string name="spot_rear_left">뒷좌석 왼쪽</string>
+    <string name="spot_rear_right">뒷좌석 오른쪽</string>
+    <string name="spot_row_side">%1$d열 %2$s</string>
+    <string name="side_left">왼쪽</string>
+    <string name="side_center">가운데</string>
+    <string name="side_right">오른쪽</string>
+
+    <string name="resolved">해결됨</string>
+    <string name="empty_handover">이어받을 일이 없어요. 깨끗한 상태로 받았어요.</string>
+    <string name="energy_line">주차할 때 배터리 %1$d%% → 지금 %2$d%%</string>
+    <string name="all_clear">모두 해결됐어요. 안전 운전하세요.</string>
+
+    <string name="voice_intro">바통입니다. 이전 운전자가 남긴 일이 %1$d가지 있어요.</string>
+    <string name="voice_none">바통입니다. 깨끗한 상태로 받으셨어요.</string>
+    <string name="voice_resolved">%1$s.</string>
+
+    <string name="done_doors_unlocked">문 잠금 확인</string>
+    <string name="done_door_open">%1$s 문 닫힘 확인</string>
+    <string name="done_trunk_open">트렁크 닫힘 확인</string>
+    <string name="done_window_open">%1$s 창문 닫힘 확인</string>
+    <string name="done_cabin_light_on">실내등 꺼짐 확인</string>
+    <string name="done_low_battery">충전 확인</string>
+</resources>

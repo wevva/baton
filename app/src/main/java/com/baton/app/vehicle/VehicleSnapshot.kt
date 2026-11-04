@@ -17,6 +17,9 @@ data class VehicleSnapshot(
     val driverSeated: Boolean? get() = seatOccupied[DRIVER_SEAT]
     val anyoneSeated: Boolean get() = seatOccupied.values.any { it }
 
+    /** 착석 센서 값이 하나라도 들어왔는지. 모르는 상태를 '아무도 없음'으로 오해하지 않기 위함 */
+    val seatsKnown: Boolean get() = seatOccupied.isNotEmpty()
+
     companion object {
         val DRIVER_SEAT = Spot(1, Spot.Side.LEFT)
     }

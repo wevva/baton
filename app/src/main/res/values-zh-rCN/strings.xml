@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">接力</string>
+
+    <string name="state_driving">行驶中</string>
+    <string name="state_parked">已停车</string>
+    <string name="state_away">已为下一位驾驶员保存交接事项</string>
+    <string name="state_boarded">交接事项</string>
+
+    <string name="tier_safety">安全</string>
+    <string name="tier_todo">待办</string>
+    <string name="tier_info">参考</string>
+
+    <string name="item_doors_unlocked">车门未上锁</string>
+    <string name="item_door_open">%1$s车门未关</string>
+    <string name="item_trunk_open">后备箱未关</string>
+    <string name="item_window_open">%1$s车窗打开了%2$d%%</string>
+    <string name="item_cabin_light_on">车内灯未关</string>
+    <string name="item_low_battery">电量不足 (%1$d%%)</string>
+
+    <string name="spot_driver">驾驶位</string>
+    <string name="spot_front_passenger">副驾驶位</string>
+    <string name="spot_rear_left">后排左侧</string>
+    <string name="spot_rear_right">后排右侧</string>
+    <string name="spot_row_side">第%1$d排%2$s</string>
+    <string name="side_left">左侧</string>
+    <string name="side_center">中间</string>
+    <string name="side_right">右侧</string>
+
+    <string name="resolved">已解决</string>
+    <string name="empty_handover">没有需要交接的事项，车辆状态良好。</string>
+    <string name="energy_line">停车时电量 %1$d%% → 当前 %2$d%%</string>
+    <string name="all_clear">全部已解决，祝您行车安全。</string>
+
+    <string name="voice_intro">这里是接力。上一位驾驶员留下了%1$d件事项。</string>
+    <string name="voice_none">这里是接力。车辆状态良好。</string>
+    <string name="voice_resolved">%1$s。</string>
+
+    <string name="done_doors_unlocked">车门已上锁</string>
+    <string name="done_door_open">%1$s车门已关闭</string>
+    <string name="done_trunk_open">后备箱已关闭</string>
+    <string name="done_window_open">%1$s车窗已关闭</string>
+    <string name="done_cabin_light_on">车内灯已关闭</string>
+    <string name="done_low_battery">已确认充电</string>
+</resources>
