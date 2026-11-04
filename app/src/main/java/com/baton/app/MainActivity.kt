@@ -29,11 +29,13 @@ class MainActivity : ComponentActivity() {
 
     private val signals = mutableStateMapOf<String, String>()
     private lateinit var probe: SignalProbe
+    private lateinit var tts: TtsProbe
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         probe = SignalProbe(this) { name, value -> runOnUiThread { signals[name] = value } }
         probe.start()
+        tts = TtsProbe(this) { name, value -> runOnUiThread { signals[name] = value } }
 
         setContent {
             MaterialTheme(colorScheme = darkColorScheme()) {
@@ -41,19 +43,21 @@ class MainActivity : ComponentActivity() {
                     signals = signals,
                     onReadAll = { probe.readAll() },
                     onSubscribe = { probe.subscribe() },
+                    onSpeak = { tts.speakSample() },
                 )
             }
         }
     }
 
     override fun onDestroy() {
+        tts.release()
         probe.stop()
         super.onDestroy()
     }
 }
 
 @Composable
-private fun ProbeScreen(signals: Map<String, String>, onReadAll: () -> Unit, onSubscribe: () -> Unit) {
+private fun ProbeScreen(signals: Map<String, String>, onReadAll: () -> Unit, onSubscribe: () -> Unit, onSpeak: () -> Unit) {
     Column(
         Modifier
             .fillMaxSize()
@@ -65,6 +69,7 @@ private fun ProbeScreen(signals: Map<String, String>, onReadAll: () -> Unit, onS
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Button(onClick = onReadAll) { Text("전체 읽기", fontSize = 22.sp) }
             Button(onClick = onSubscribe) { Text("실시간 구독", fontSize = 22.sp) }
+            Button(onClick = onSpeak) { Text("음성 테스트", fontSize = 22.sp) }
         }
         Spacer(Modifier.padding(8.dp))
         LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {

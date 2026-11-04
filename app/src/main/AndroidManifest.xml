@@ -15,6 +15,10 @@
     <!-- 타이어 공기압은 AAOS 표준 권한 필요 -->
     <uses-permission android:name="android.car.permission.CAR_TIRES" />
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Pleos TTS SDK -->
+    <uses-permission android:name="pleos.car.permission.TTS_SERVICE" />
+
     <application
         android:allowBackup="false"
         android:icon="@android:drawable/sym_def_app_icon"
