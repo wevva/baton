@@ -18,7 +18,6 @@ class ProfileDiscovery(private val vehicle: Vehicle) {
     data class Result(
         val profile: VehicleProfile,
         val vin: String?,
-        val rawCapabilityKeys: List<String>,
         val log: List<String>,
     )
 
@@ -26,16 +25,16 @@ class ProfileDiscovery(private val vehicle: Vehicle) {
         val log = mutableListOf<String>()
         fun note(s: String) { log += s; Log.i(TAG, s) }
 
-        val doorPos = ask("doorPosition", ::note) { ok, fail -> vehicle.getDoor().checkDoorPositionCapabilities(ok, fail) }
-        val doorLock = ask("doorLock", ::note) { ok, fail -> vehicle.getDoor().checkDoorLockCapabilities(ok, fail) }
-        val windows = ask("windowPosition", ::note) { ok, fail -> vehicle.getWindow().checkWindowPositionCapabilities(ok, fail) }
-        val seats = ask("seatOccupancy", ::note) { ok, fail -> vehicle.getSeat().checkSeatOccupancyCapabilities(ok, fail) }
+        val doorPos = ask("doorPosition", ::note) { ok, fail -> vehicle.getDoor().checkDoorPositionCapabilities({ _, areas -> ok(areas) }, fail) }
+        val doorLock = ask("doorLock", ::note) { ok, fail -> vehicle.getDoor().checkDoorLockCapabilities({ _, areas -> ok(areas) }, fail) }
+        val windows = ask("windowPosition", ::note) { ok, fail -> vehicle.getWindow().checkWindowPositionCapabilities({ _, areas -> ok(areas) }, fail) }
+        val seats = ask("seatOccupancy", ::note) { ok, fail -> vehicle.getSeat().checkSeatOccupancyCapabilities({ _, areas -> ok(areas) }, fail) }
         val cabin = ask("cabinLight", ::note) { ok, fail ->
             vehicle.getLight().checkCabinLightStateCapabilities({ cfg, _ -> ok(cfg) }, fail)
         }
         val soc = ask("batterySoc", ::note) { ok, fail -> vehicle.getEvBattery().checkEvBatteryStateOfChargeCapabilities(ok, fail) }
         val vin = ask("vin", ::note) { ok, fail -> vehicle.getCarInfo().getVINInfo(ok, fail) }
-        val caps = ask("capabilityInfo", ::note) { ok, fail -> vehicle.getCarInfo().getCapabilityInfo(ok, fail) }
+        // getCapabilityInfo는 PRIVATE 권한 필요(서드파티 불가) → 기능별 확인 API로 대신함
 
         val doorSpots = doorPos?.keys?.flatMap { area -> area.values.mapNotNull { doorSpot(it) } }?.distinct().orEmpty()
         val hasTrunk = doorPos?.keys?.any { area -> area.values.any { it == DoorValue.REAR } } == true
@@ -56,7 +55,7 @@ class ProfileDiscovery(private val vehicle: Vehicle) {
         note("PROFILE rows=${profile.rows} seats=${profile.seatCount} doors=${profile.doors.map { it.code }} " +
             "windows=${profile.windows.mapKeys { it.key.code }} lock=${profile.hasDoorLock} trunk=${profile.hasTrunk} " +
             "cabin=${profile.hasCabinLight} soc=${profile.hasBatterySoc}")
-        return Result(profile, vin, caps?.keys?.sorted().orEmpty(), log)
+        return Result(profile, vin, log)
     }
 
     /** SDK 콜백 하나를 기다린다. 실패·시간초과면 null (= 이 차엔 그 기능이 없다고 본다) */

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -16,9 +18,24 @@ android {
         versionName = "0.1.0"
     }
 
+    // 서명 키는 저장소 밖(C:/dev/keys)에 둔다. 경로는 환경변수 BATON_KEYSTORE_PROPS로 바꿀 수 있음
+    val keyProps = Properties().apply {
+        val f = file(System.getenv("BATON_KEYSTORE_PROPS") ?: "C:/dev/keys/keystore.properties")
+        if (f.exists()) f.inputStream().use { load(it) }
+    }
+    signingConfigs {
+        if (keyProps.isNotEmpty()) create("release") {
+            storeFile = file(keyProps.getProperty("storeFile"))
+            storePassword = keyProps.getProperty("storePassword")
+            keyAlias = keyProps.getProperty("keyAlias")
+            keyPassword = keyProps.getProperty("keyPassword")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.findByName("release")
         }
     }
     compileOptions {
