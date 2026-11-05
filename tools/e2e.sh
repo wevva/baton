@@ -32,7 +32,8 @@ fresh_start() {
 # 앱이 차량 구성 인식을 마칠 때까지 기다림 (최대 30초) — 준비 전에 신호를 넣으면 놓칠 수 있다
 wait_ready() {
   for _ in $(seq 1 30); do
-    $ADB logcat -d -s "BatonProfile:*" | grep -q "PROFILE" && { sleep 2; return 0; }
+    # 신호 구독 완료 후 시작 보호 구간(3초: 점등 점검·오래된 값 무시)이 지나야 경고등 변화를 센다
+    $ADB logcat -d -s "BatonSignals:*" | grep -q "신호 구독 완료" && { sleep 4; return 0; }
     sleep 1
   done
   echo "      (경고: 준비 로그를 30초 안에 못 봄)"

@@ -41,11 +41,13 @@ class VehicleSignals(
     private val lampLock = Any()
     private var lampsPrev: Set<String> = emptySet()
     private var firstReport = true
+    private var subscribedAt = 0L
     /** 시작 직후 첫 보고에 있던 경고등: 오래된 값일 수 있어 바로 세지 않고, 유지되는지 지켜본다 (이름 → 처음 본 시각) */
     private val initialPending = HashMap<String, Long>()
 
     /**
-     * Pleos 경고등 서비스는 구독 직후 '예전 값'을 먼저 보낸 뒤 실제 값을 보낼 수 있다 (2026-11-05 에뮬레이터 실측:
+     * 실차에서는 시동 직후 계기판이 경고등을 한꺼번에 잠깐 켜서 점검한다(점등 점검). 이것을 세면 모든 경고를 거짓으로 인계한다.
+     * 또 Pleos 경고등 서비스는 구독 직후 '예전 값'을 먼저 보낸 뒤 실제 값을 보낼 수 있다 (2026-11-05 에뮬레이터 실측:
      * 꺼진 12V 경고가 켜짐 → 곧바로 꺼짐). 이를 '켜졌다 꺼짐'으로 세면 거짓 인계가 된다.
      * → 첫 보고의 경고등은 [INITIAL_CONFIRM_MS] 이상 유지될 때만 1번으로 센다. 그 뒤의 꺼짐→켜짐은 바로 센다.
      */
@@ -53,12 +55,16 @@ class VehicleSignals(
         val now = lampsOn(info)
         val t = clock()
         synchronized(lampLock) {
-            val newlyOn = if (firstReport) {
-                now.forEach { initialPending[it] = t }
-                firstReport = false
+            // 구독 직후 [STARTUP_WINDOW_MS] 동안 들어온 켜짐은 오래된 값일 수 있다 (조회 응답·구독 첫 콜백 순서가 매번 다름)
+            val inStartup = firstReport || t - subscribedAt < STARTUP_WINDOW_MS
+            firstReport = false
+            val raw = now - lampsPrev
+            val newlyOn = if (inStartup) {
+                raw.forEach { initialPending.putIfAbsent(it, t) }
+                now.forEach { initialPending.putIfAbsent(it, t) }
                 emptySet()
             } else {
-                now - lampsPrev
+                raw
             }
             initialPending.keys.retainAll(now) // 첫 보고 뒤 꺼진 것은 오래된 값이었음 → 세지 않음
             val confirmedInitial = initialPending.filterValues { t - it >= INITIAL_CONFIRM_MS }.keys
@@ -146,6 +152,7 @@ class VehicleSignals(
             cleanups += { safety.unregisterLowWasherFluidWaringState(l) }
         }
         if (profile.hasTelltales) guard("telltales") {
+            subscribedAt = clock()
             val l = object : TelltaleInfoListener {
                 override fun onTelltaleInfoUpdated(info: Telltales?) = onLamps(info)
                 override fun onFailed(e: Exception) = warn("telltales", e)
@@ -155,6 +162,7 @@ class VehicleSignals(
             // 구독 직후 현재 상태를 한 번 읽어 둔다 (변화가 없으면 콜백이 오지 않을 수 있음)
             safety.getTelltalesInfo({ info -> onLamps(info) }, { e -> warn("telltales get", e) })
         }
+        BatonLog.i(TAG, "신호 구독 완료")
     }
 
     fun stop() {
@@ -195,6 +203,8 @@ class VehicleSignals(
 
         /** 시작 직후 첫 보고의 경고등을 실제 경고로 인정하기까지 유지돼야 하는 시간 */
         private const val INITIAL_CONFIRM_MS = 5_000L
+        /** 구독 직후 오래된 값이 섞여 들어올 수 있는 시간 */
+        private const val STARTUP_WINDOW_MS = 3_000L
 
         /** 에뮬레이터 DOOR_LOCK은 4개 문을 합친 단일 영역(0x55)만 지원 */
         private val ALL_DOORS = DoorArea(DoorValue.ROW_1_LEFT, DoorValue.ROW_1_RIGHT, DoorValue.ROW_2_LEFT, DoorValue.ROW_2_RIGHT)
