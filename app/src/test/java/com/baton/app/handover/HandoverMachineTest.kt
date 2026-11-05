@@ -99,6 +99,16 @@ class HandoverMachineTest {
 
     // ── TR: 지난 운행 중 켜졌던 경고 (핵심 차별점) ─────────────────
 
+    @Test fun `TR-11 신호 계층이 집계를 맡으면 켜짐 집합 변화로는 세지 않는다 (오래된 초기값 오탐 방지)`() {
+        val m = HandoverMachine(car)
+        // 구독 직후 오래된 값으로 12V 켜짐 → 곧바로 꺼짐, 신호 계층은 세지 않음(누적 0)
+        m.onSnapshot(snap(0, gear = Gear.DRIVE, lamps = setOf("LOW_VOLT_BATTERY")).copy(lampCountsProvided = true))
+        m.onSnapshot(snap(100, gear = Gear.DRIVE, lamps = emptySet()).copy(lampCountsProvided = true))
+        m.onSnapshot(snap(200).copy(lampCountsProvided = true))
+        m.onSnapshot(snap(300, driverSeated = false).copy(lampCountsProvided = true))
+        assertTrue((m.onTick(2_400) as State.Away).handover.allClear)
+    }
+
     @Test fun `TR-10 1초 안에 켜졌다 꺼져 중간 상태를 못 봐도 누적 횟수로 빠짐없이 센다`() {
         val m = HandoverMachine(car)
         m.onSnapshot(snap(0, gear = Gear.DRIVE))

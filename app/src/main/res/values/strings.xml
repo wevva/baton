@@ -37,7 +37,7 @@
     <string name="history_button">History</string>
     <string name="history_title">Handover history</string>
     <string name="history_empty">No handovers yet.</string>
-    <string name="history_row">%1$s · %2$d left, %3$d resolved</string>
+    <string name="history_row">%1$s · %2$d passed on, %3$d resolved</string>
     <string name="history_received">Received %1$s</string>
     <string name="history_not_received">Not received</string>
     <string name="back">Back</string>

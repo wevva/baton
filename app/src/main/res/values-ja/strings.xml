@@ -36,7 +36,7 @@
     <string name="history_button">履歴</string>
     <string name="history_title">引き継ぎ履歴</string>
     <string name="history_empty">まだ引き継ぎ記録はありません。</string>
-    <string name="history_row">%1$s · 残した項目 %2$d件、解決 %3$d件</string>
+    <string name="history_row">%1$s · 引き継ぎ %2$d件、解決 %3$d件</string>
     <string name="history_received">%1$s 受け取り</string>
     <string name="history_not_received">受け取り確認なし</string>
     <string name="back">戻る</string>

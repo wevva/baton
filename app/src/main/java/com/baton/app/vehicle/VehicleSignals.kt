@@ -40,16 +40,36 @@ class VehicleSignals(
     /** 경고등 켜짐 누적 집계 (콜백 스레드에서 호출되므로 동기화) */
     private val lampLock = Any()
     private var lampsPrev: Set<String> = emptySet()
+    private var firstReport = true
+    /** 시작 직후 첫 보고에 있던 경고등: 오래된 값일 수 있어 바로 세지 않고, 유지되는지 지켜본다 (이름 → 처음 본 시각) */
+    private val initialPending = HashMap<String, Long>()
 
+    /**
+     * Pleos 경고등 서비스는 구독 직후 '예전 값'을 먼저 보낸 뒤 실제 값을 보낼 수 있다 (2026-11-05 에뮬레이터 실측:
+     * 꺼진 12V 경고가 켜짐 → 곧바로 꺼짐). 이를 '켜졌다 꺼짐'으로 세면 거짓 인계가 된다.
+     * → 첫 보고의 경고등은 [INITIAL_CONFIRM_MS] 이상 유지될 때만 1번으로 센다. 그 뒤의 꺼짐→켜짐은 바로 센다.
+     */
     private fun onLamps(info: Telltales?) {
         val now = lampsOn(info)
+        val t = clock()
         synchronized(lampLock) {
-            val newlyOn = now - lampsPrev
+            val newlyOn = if (firstReport) {
+                now.forEach { initialPending[it] = t }
+                firstReport = false
+                emptySet()
+            } else {
+                now - lampsPrev
+            }
+            initialPending.keys.retainAll(now) // 첫 보고 뒤 꺼진 것은 오래된 값이었음 → 세지 않음
+            val confirmedInitial = initialPending.filterValues { t - it >= INITIAL_CONFIRM_MS }.keys
+            confirmedInitial.forEach { initialPending.remove(it) }
+            val counted = (newlyOn - initialPending.keys) + confirmedInitial
+            if (newlyOn.isNotEmpty() || (lampsPrev - now).isNotEmpty()) BatonLog.i(TAG, "경고등: 켜짐 $newlyOn / 꺼짐 ${lampsPrev - now}")
             lampsPrev = now
             set { s ->
                 val counts = s.lampOnCounts.toMutableMap()
-                for (n in newlyOn) counts[n] = (counts[n] ?: 0) + 1
-                s.copy(telltalesOn = now, lampOnCounts = counts)
+                for (n in counted) counts[n] = (counts[n] ?: 0) + 1
+                s.copy(telltalesOn = now, lampOnCounts = counts, lampCountsProvided = true)
             }
         }
     }
@@ -172,6 +192,9 @@ class VehicleSignals(
 
     companion object {
         const val TAG = "BatonSignals"
+
+        /** 시작 직후 첫 보고의 경고등을 실제 경고로 인정하기까지 유지돼야 하는 시간 */
+        private const val INITIAL_CONFIRM_MS = 5_000L
 
         /** 에뮬레이터 DOOR_LOCK은 4개 문을 합친 단일 영역(0x55)만 지원 */
         private val ALL_DOORS = DoorArea(DoorValue.ROW_1_LEFT, DoorValue.ROW_1_RIGHT, DoorValue.ROW_2_LEFT, DoorValue.ROW_2_RIGHT)

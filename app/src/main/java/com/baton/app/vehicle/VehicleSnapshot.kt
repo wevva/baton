@@ -19,6 +19,8 @@ data class VehicleSnapshot(
      * 상태 흐름이 중간값을 건너뛰어도(1초 안에 켜졌다 꺼짐) 횟수는 빠지지 않는다.
      */
     val lampOnCounts: Map<String, Int> = emptyMap(),
+    /** true면 lampOnCounts만으로 센다 (차량 신호 계층이 집계를 맡음). false면 켜짐 집합 변화로 센다(단위 테스트·단순 입력) */
+    val lampCountsProvided: Boolean = false,
     val timestampMs: Long = 0L,
 ) {
     enum class Gear { PARK, REVERSE, NEUTRAL, DRIVE, UNKNOWN }

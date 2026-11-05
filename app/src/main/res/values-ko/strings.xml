@@ -36,7 +36,7 @@
     <string name="history_button">이력</string>
     <string name="history_title">인계 이력</string>
     <string name="history_empty">아직 인계 기록이 없어요.</string>
-    <string name="history_row">%1$s · 남긴 일 %2$d건, 해결 %3$d건</string>
+    <string name="history_row">%1$s · 넘긴 것 %2$d건, 해결 %3$d건</string>
     <string name="history_received">%1$s 수령</string>
     <string name="history_not_received">수령 확인 없음</string>
     <string name="back">돌아가기</string>

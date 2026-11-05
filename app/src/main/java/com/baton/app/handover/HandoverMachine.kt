@@ -117,7 +117,7 @@ class HandoverMachine(
         val lamps = s.telltalesOn ?: return
         val counting = state == State.Driving || state == State.Parked
         // 누적 횟수가 있으면 그 증가분으로 센다 (중간값을 건너뛰어도 빠지지 않음). 없으면 켜짐 집합의 변화로 센다
-        val newly: Map<String, Int> = if (s.lampOnCounts.isNotEmpty()) {
+        val newly: Map<String, Int> = if (s.lampCountsProvided || s.lampOnCounts.isNotEmpty()) {
             s.lampOnCounts.mapValues { (n, c) -> c - (countsBefore[n] ?: 0) }.filterValues { it > 0 }
         } else {
             (lamps - lampsBefore).associateWith { 1 }
@@ -128,7 +128,7 @@ class HandoverMachine(
             }
         }
         lampsBefore = lamps
-        if (s.lampOnCounts.isNotEmpty()) countsBefore = s.lampOnCounts
+        if (s.lampCountsProvided || s.lampOnCounts.isNotEmpty()) countsBefore = s.lampOnCounts
     }
 
     /** 차를 떠나는 순간 넘길 항목: 지금 상태 + 이번 운행 중 켜졌다 꺼진 경고 */

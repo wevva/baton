@@ -6,29 +6,33 @@
 # 케이스 ID는 docs/TEST_CASES.md 와 같다.
 export MSYS_NO_PATHCONV=1
 DIR="$(cd "$(dirname "$0")" && pwd)"
-ADB="${ADB:-$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe}"
+ADB_BIN="${ADB:-$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe}"
+adb_t() { timeout 60 "$ADB_BIN" "$@"; }
+ADB=adb_t
 PKG=com.baton.app
 ONLY="$1"
 PASS=0; FAIL=0; FAILED=()
 
 vc()   { bash "$DIR/vc.sh" "$@" >/dev/null; }
-logs() { "$ADB" logcat -d -s "Baton:*" "BatonStore:*" | sed -E 's/^.{31}//'; }
-clear_logs() { "$ADB" logcat -c; }
-ui_text() { "$ADB" shell uiautomator dump /sdcard/u.xml >/dev/null; "$ADB" shell cat /sdcard/u.xml | grep -oE 'text="[^"]*"' | tr '\n' ' '; }
+logs() { $ADB logcat -d -s "Baton:*" "BatonStore:*" | sed -E 's/^.{31}//'; }
+clear_logs() { $ADB logcat -c; }
+ui_text() { $ADB shell uiautomator dump /sdcard/u.xml >/dev/null; $ADB shell cat /sdcard/u.xml | grep -oE 'text="[^"]*"' | tr '\n' ' '; }
 
 # 앱을 깨끗한 상태(저장 인계 없음)로 시작. 차량은 '주행 중, 운전자 착석, 경고등 모두 꺼짐'
 fresh_start() {
-  "$ADB" shell am force-stop $PKG
-  "$ADB" shell "run-as $PKG --user 10 rm -f files/handover.bin" 2>/dev/null
-  vc lamps_off; vc lamp SeatBelt Off; vc gear Drive; vc seat driver true; vc seat passenger false; vc soc 62
+  $ADB shell am force-stop $PKG
+  $ADB shell "run-as $PKG --user 10 rm -f files/handover.bin" 2>/dev/null
+  vc lamps_off; vc gear Drive; vc seat driver true; vc seat passenger false; vc soc 62
+  # 콘솔이 '꺼짐'을 차량에 반영하는 데 몇 초 걸린다 — 앞 테스트의 경고등이 이번 운행으로 섞이지 않게 기다린다
+  sleep 6
   clear_logs
-  "$ADB" shell am start -n $PKG/.MainActivity >/dev/null
+  $ADB shell am start -n $PKG/.MainActivity >/dev/null
   wait_ready
 }
 # 앱이 차량 구성 인식을 마칠 때까지 기다림 (최대 30초) — 준비 전에 신호를 넣으면 놓칠 수 있다
 wait_ready() {
   for _ in $(seq 1 30); do
-    "$ADB" logcat -d -s "BatonProfile:*" | grep -q "PROFILE" && { sleep 2; return 0; }
+    $ADB logcat -d -s "BatonProfile:*" | grep -q "PROFILE" && { sleep 2; return 0; }
     sleep 1
   done
   echo "      (경고: 준비 로그를 30초 안에 못 봄)"
@@ -49,17 +53,20 @@ expect_ui() {
   echo "      ✗ 화면에 없음: $1  ('$2')"; return 1
 }
 tap_text() {
-  "$ADB" shell uiautomator dump /sdcard/u.xml >/dev/null
+  $ADB shell uiautomator dump /sdcard/u.xml >/dev/null
   # 부분 일치 (예: "…켜져 있어요" 뒤에 "(지난 운행 중 1번)"이 붙어도 찾음)
-  local b; b=$("$ADB" shell cat /sdcard/u.xml | grep -o "text=\"[^\"]*$1[^\"]*\"[^>]*bounds=\"[^\"]*\"" | head -1 | grep -o 'bounds="[^"]*"' | grep -o '[0-9]\+' | tr '\n' ' ')
+  local b; b=$($ADB shell cat /sdcard/u.xml | grep -o "text=\"[^\"]*$1[^\"]*\"[^>]*bounds=\"[^\"]*\"" | head -1 | grep -o 'bounds="[^"]*"' | grep -o '[0-9]\+' | tr '\n' ' ')
   [ -z "$b" ] && return 1
-  set -- $b; "$ADB" shell input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 ))
+  set -- $b; $ADB shell input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 ))
 }
 
 run() { # $1=ID $2=설명 $3=함수
   [ -n "$ONLY" ] && [ "$ONLY" != "$1" ] && return
   printf '▶ %s %s\n' "$1" "$2"
-  if "$3"; then PASS=$((PASS+1)); echo "   ✓ 통과"; else FAIL=$((FAIL+1)); FAILED+=("$1"); echo "   ✗ 실패"; fi
+  if "$3"; then PASS=$((PASS+1)); echo "   ✓ 통과"; else
+    FAIL=$((FAIL+1)); FAILED+=("$1"); echo "   ✗ 실패 — 앱 로그:"
+    $ADB logcat -d -s "Baton:*" "BatonSignals:*" | sed -E 's/^.{19}//' | grep -v beginning | tail -14 | sed 's/^/        /'
+  fi
 }
 
 # ── 케이스 ─────────────────────────────────────────────────────
@@ -110,8 +117,8 @@ t06() { # 앱 강제 종료 후 복원
   fresh_start
   vc lamp ESCOff On; sleep 1
   park_and_exit
-  "$ADB" shell am force-stop $PKG; sleep 1; clear_logs
-  "$ADB" shell am start -n $PKG/.MainActivity >/dev/null; wait_ready
+  $ADB shell am force-stop $PKG; sleep 1; clear_logs
+  $ADB shell am start -n $PKG/.MainActivity >/dev/null; wait_ready
   board
   expect_log "복원" "복원: Away" &&
   expect_log "복원 후 탑승 인계" "상태: Away → Boarded \(남은 일=1\)"
@@ -147,11 +154,11 @@ t10() { # 저장 파일 변조 → 크래시 없이 무시
   fresh_start
   vc lamp ESCOff On; sleep 1
   park_and_exit
-  "$ADB" shell "run-as $PKG --user 10 sh -c 'printf Z | dd of=files/handover.bin bs=1 seek=40 conv=notrunc 2>/dev/null'"
-  "$ADB" shell am force-stop $PKG; "$ADB" logcat -c -b crash; clear_logs
-  "$ADB" shell am start -n $PKG/.MainActivity >/dev/null; wait_ready
+  $ADB shell "run-as $PKG --user 10 sh -c 'printf Z | dd of=files/handover.bin bs=1 seek=40 conv=notrunc 2>/dev/null'"
+  $ADB shell am force-stop $PKG; $ADB logcat -c -b crash; clear_logs
+  $ADB shell am start -n $PKG/.MainActivity >/dev/null; wait_ready
   expect_no_log "변조된 인계를 복원하지 않음" "복원: Away" &&
-  [ "$("$ADB" logcat -d -b crash | grep -c $PKG)" = "0" ] || { echo "      ✗ 크래시 발생"; return 1; }
+  [ "$($ADB logcat -d -b crash | grep -c $PKG)" = "0" ] || { echo "      ✗ 크래시 발생"; return 1; }
 }
 
 t11() { # 주행 중 화면은 한 줄
@@ -187,7 +194,7 @@ t14() { # 지금 켜진 안전 경고는 눌러도 숨겨지지 않음
 
 t15() { # 홈으로 나가도 감지 계속 (앱을 열지 않아도 동작)
   fresh_start
-  "$ADB" shell input keyevent KEYCODE_HOME; sleep 2
+  $ADB shell input keyevent KEYCODE_HOME; sleep 2
   vc lamp ABS On; sleep 1; vc lamp ABS Off; sleep 1
   park_and_exit; board
   expect_log "백그라운드 하차 기록" "상태: Parked → Away \(남은 일=1\)" &&
@@ -196,8 +203,8 @@ t15() { # 홈으로 나가도 감지 계속 (앱을 열지 않아도 동작)
 
 t16() { # 보안: 외부(셸)에서 서비스·수신기 강제 호출 불가
   local out1 out2
-  out1=$("$ADB" shell am start-foreground-service -n $PKG/.HandoverService 2>&1)
-  out2=$("$ADB" shell am broadcast -n $PKG/.BootReceiver -a android.intent.action.BOOT_COMPLETED 2>&1)
+  out1=$($ADB shell am start-foreground-service -n $PKG/.HandoverService 2>&1)
+  out2=$($ADB shell am broadcast -n $PKG/.BootReceiver -a android.intent.action.BOOT_COMPLETED 2>&1)
   echo "$out1" | grep -qiE "security|not exported|denied|requires" || { echo "      ✗ 서비스가 외부에서 시작됨: $out1"; return 1; }
   echo "$out2" | grep -qiE "security|not exported|denied|protected|requires|result=0" || { echo "      ✗ 수신기 응답: $out2"; return 1; }
 }

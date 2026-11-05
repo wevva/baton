@@ -4,8 +4,8 @@
 # 사용: tools/vc.sh gear Drive | soc 62 | seat driver true | lamp TPMS On [Yellow] | lamp ESCOff Off | lock true
 #   lamp 이름은 콘솔 표기(TPMS, ABS, ESCOff, LowVoltBattery, EVSystem, MDPS, Airbag ...), 상태 On|Off|Blink, 색 Red|Yellow|Green|White
 C=${VC_URL:-http://127.0.0.1:8088}
-ping_session() { curl -s -X POST "$C/browser/session?client=baton-cli" >/dev/null; }
-put() { ping_session; curl -s -X PUT "$C$1"; echo; }
+ping_session() { curl -s --max-time 10 -X POST "$C/browser/session?client=baton-cli" >/dev/null; }
+put() { ping_session; curl -s --max-time 10 -X PUT "$C$1"; echo; }
 case "$1" in
   gear)      put "/vehicle/gear?gear=$2" ;;
   soc)       put "/vehicle/ev-battery?field=soc&value=$2" ;;
@@ -17,7 +17,11 @@ case "$1" in
   seat)      put "/vehicle/seat?kind=occupied&area=$2&value=$3" ;;
   range)     put "/vehicle/odometer?remaining_range_m=$2" ;;
   lamp)      put "/vehicle/telltales/simulator?type=$2&state=$3&color=${4:-Yellow}" ;;
-  lamps_off) for t in TPMS ABS ESC ESCOff LowVoltBattery EVSystem MDPS Airbag MasterWarning Engine EngineOilPressure EngineTemperature PowerDown; do put "/vehicle/telltales/simulator?type=$t&state=Off&color=Yellow" >/dev/null; done; echo ok ;;
+  lamps_off) # 콘솔의 경고등 37종을 빨강·노랑 모두로 끈다 (켤 때 쓴 색으로 꺼야 꺼짐)
+    ping_session
+    for t in ParkingBrake ElectronicParkingBrake SeatBelt DoorOpen ABS MDPS TPMS LowVoltBattery ESC ESCOff Airbag AFS MasterWarning AutoHold AutoHighBeam HeadlampLow HeadlampHigh PositionLamp FrontFogLamp RearFogLamp EngineOilPressure EngineTemperature EmergencyCall EVSystem PowerDown RBS Immobilizer Engine LEDHeadlamp Preheat ParticleFilter H2Sensor H2Leak PassengerAirbagOff PassengerAirbagOn TurnSignalLeft TurnSignalRight; do
+      for c in Red Yellow; do curl -s --max-time 10 -X PUT "$C/vehicle/telltales/simulator?type=$t&state=Off&color=$c" >/dev/null; done
+    done; ping_session; echo ok ;;
   keepalive) while true; do ping_session; sleep 1; done ;;
   *) echo "usage: $0 {gear|soc|seat|lamp|lamps_off|lock|door_fl|window_fl|cabin|tire|range|keepalive} ..."; exit 1 ;;
 esac
