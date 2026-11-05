@@ -91,6 +91,8 @@ BatonApp · BatonController · HandoverService(감시) · BootReceiver(자동 �
 adb forward tcp:8088 tcp:8088      # Pleos Virtual Console
 bash tools/demo.sh                 # 운행 중 타이어 경고 2번 + ESC 끈 채 하차 → 다음 운전자 안내 → ESC 다시 켜면 해제 확인 → 출발
 bash tools/vc.sh lamp TPMS On      # 경고등 조작 (lamp 이름 On|Off [Red|Yellow]) · gear · seat · soc
+bash tools/record_demo.sh out/     # 시연 녹화: 화면 + 차량 음성 + 장면 시각 (PC 소리 녹음에 soundcard 패키지 필요)
+python tools/make_video.py out/ demo.mp4   # 자막·시작/끝 카드 합성 (ffmpeg 필요)
 ```
 
 ## 확인된 플랫폼 제약 (에뮬레이터 v2.1.0 기준)
