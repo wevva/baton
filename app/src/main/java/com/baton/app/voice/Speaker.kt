@@ -3,6 +3,7 @@ package com.baton.app.voice
 import ai.pleos.playground.tts.TextToSpeech
 import ai.pleos.playground.tts.constant.ErrorType
 import ai.pleos.playground.tts.constant.Mode
+import ai.pleos.playground.tts.listener.EventListener
 import ai.pleos.playground.tts.listener.OnInitializeListener
 import android.content.Context
 import com.baton.app.security.BatonLog
@@ -20,6 +21,16 @@ class Speaker(context: Context) {
 
     init {
         initialize()
+        runCatching {
+            tts.addEventListener(object : EventListener {
+                override fun onStart() { BatonLog.i(TAG, "TTS onStart") }
+                override fun onReady() { BatonLog.i(TAG, "TTS onReady") }
+                override fun onDone() { BatonLog.i(TAG, "TTS onDone") }
+                override fun onError(error: ErrorType) { BatonLog.w(TAG, "TTS onError $error") }
+                override fun onStop() { BatonLog.i(TAG, "TTS onStop") }
+                override fun onUpdatedRms(rms: Double) {}
+            })
+        }
     }
 
     /**
@@ -44,7 +55,9 @@ class Speaker(context: Context) {
         if (!canSpeak(locale)) return
         runCatching {
             tts.setLocale(if (locale.language == "ko") Locale.KOREA else Locale.US)
-            tts.speak(text, false)
+            // 두 번째 인자 = 이 문장으로 텍스트 스트림이 끝났는지(isFinal). false면 엔진이 문장을 계속 열어 두어
+            // 다음 안내(해제 확인·출발 경고)가 재생되지 않는다 (2026-11-05 에뮬레이터 로그 streamTextIsFinal 확인)
+            tts.speak(text, true)
         }.onFailure { BatonLog.w(TAG, "발화 실패: ${it.message}") }
     }
 

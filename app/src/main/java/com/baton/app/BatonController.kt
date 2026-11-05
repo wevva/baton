@@ -173,8 +173,9 @@ class BatonController(
         if (events.isEmpty()) return
         val locale = _ui.value.locale
         val text = ItemText(context, locale, profile.driverSeat)
-        for (e in events) {
-            val msg = when (e) {
+        // 같은 순간에 난 안내는 한 문장으로 묶어 한 번에 말한다 (연달아 speak하면 앞 문장이 끊길 수 있음)
+        val msgs = events.map { e ->
+            when (e) {
                 is Announcer.Event.Intro ->
                     if (e.open.isEmpty()) text.str(R.string.voice_none)
                     else text.plural(R.plurals.voice_intro, e.open.size, e.open.size) + " " + spoken(text, e.open)
@@ -182,9 +183,10 @@ class BatonController(
                 is Announcer.Event.DepartWithSafety ->
                     text.plural(R.plurals.voice_depart_safety, e.items.size, e.items.size) + " " + spoken(text, e.items)
             }
-            BatonLog.i(TAG, "안내: $msg")
-            speaker.say(msg, locale)
         }
+        val msg = msgs.joinToString(" ")
+        BatonLog.i(TAG, "안내: $msg")
+        speaker.say(msg, locale)
     }
 
     /** 음성은 짧게: 앞의 3건만 읽고 나머지는 "외 N건" (운전석 음성 피로 방지) */
