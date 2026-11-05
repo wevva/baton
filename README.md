@@ -4,6 +4,14 @@
 
 현대자동차그룹 차량용 앱 개발 공모전(Pleos Connect, Android Automotive OS) 출품작입니다.
 
+| 다음 운전자 탑승: 지난 운행 경고 + 바뀐 설정 | ESC를 다시 켜면 '해제 확인', 수령증 |
+|---|---|
+| ![탑승](docs/images/boarded_ko.png) | ![해결·수령](docs/images/received_ko.png) |
+
+| 내리기 전 미리보기 (떠나는 사람) | 받는 사람 언어로 (일본어) |
+|---|---|
+| ![주차 미리보기](docs/images/parked_preview.png) | ![일본어](docs/images/boarded_ja.png) |
+
 ## 왜 필요한가
 
 - 앞사람 운행 중 **타이어 공기압 경고가 켜졌다 꺼졌다면**, 다음 운전자는 시동을 걸어도 알 수 없습니다. 경고는 이미 꺼져 있으니까요.

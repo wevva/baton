@@ -270,7 +270,7 @@ private fun ItemCard(t: ItemText, item: OpenItem, done: Boolean, onTap: ((OpenIt
         Column(Modifier.weight(1f)) {
             Text(
                 when { done -> t.done(item); preview -> t.preview(item); else -> t.item(item) },
-                color = if (done) C.done else C.text, fontSize = 30.sp, fontWeight = FontWeight.SemiBold,
+                color = if (done) C.done else C.text, fontSize = 30.sp, lineHeight = 40.sp, fontWeight = FontWeight.SemiBold,
             )
         }
         Text(
