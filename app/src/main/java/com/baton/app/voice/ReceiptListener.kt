@@ -27,8 +27,14 @@ class ReceiptListener(context: Context) {
     @Volatile private var ready = false
     @Volatile private var session: Session? = null
 
-    private class Session(val language: String, val onMatch: () -> Unit, val onEnd: () -> Unit) {
+    private class Session(
+        val language: String, val onMatch: () -> Unit, val onEnd: () -> Unit,
+        /** 개발용 주입 소리 (디버그 빌드, 없으면 마이크) */
+        val injected: ByteArray?,
+    ) {
         var done = false
+        var startedAt = 0L
+        var retried = false
     }
 
     init {
@@ -39,7 +45,7 @@ class ReceiptListener(context: Context) {
                 override fun onUpdatedEpdData(on: Long, off: Long) {}
                 override fun onStartedRecognition() {}
                 override fun onEndedRecognition() {}
-                override fun onError(error: ErrorType) { BatonLog.w(TAG, "인식 오류 $error"); main.post { finish(false) } }
+                override fun onError(error: ErrorType) { BatonLog.w(TAG, "인식 오류 $error"); main.post { onEngineError() } }
                 override fun onReady() {}
                 override fun onUpdatedRms(rms: Double) {}
             })
@@ -57,14 +63,37 @@ class ReceiptListener(context: Context) {
         val s = stt
         if (s == null || !canListen(locale)) { onEnd(); return }
         stop()
-        val sess = Session(locale.language, onMatch, onEnd).also { session = it }
-        runCatching {
-            s.setLocale(if (locale.language == "ko") Locale.KOREA else Locale.US)
-            // 개발용 주입 파일이 있으면 마이크를 열지 않고 그 소리만 넣는다 (에뮬레이터 마이크 오류와 섞이지 않게)
-            if (injectFile()?.exists() == true) inject() else s.request()
-            BatonLog.i(TAG, "수령 음성 듣기 시작 (${LISTEN_MS / 1000}초)")
-        }.onFailure { BatonLog.w(TAG, "듣기 시작 실패: ${it.message}"); finish(false); return }
+        // 개발용 주입 파일이 있으면 마이크를 열지 않고 그 소리만 넣는다 (에뮬레이터 마이크 오류와 섞이지 않게)
+        val injected = injectFile()?.takeIf { it.exists() }?.let { f -> runCatching { f.readBytes().also { f.delete() } }.getOrNull() }
+        val sess = Session(locale.language, onMatch, onEnd, injected).also { session = it }
+        runCatching { s.setLocale(if (locale.language == "ko") Locale.KOREA else Locale.US) }
+        // 앞서 앱이 듣는 중에 종료됐다면 음성 서비스에 이전 세션이 남아 새 세션과 충돌한다(2026-11-11 실측) → 먼저 닫는다
+        runCatching { s.stop() }
+        main.postDelayed({ begin(sess) }, 300)
         main.postDelayed({ if (session === sess) finish(false) }, LISTEN_MS)
+        BatonLog.i(TAG, "수령 음성 듣기 시작 (${LISTEN_MS / 1000}초)")
+    }
+
+    private fun begin(sess: Session) {
+        if (session !== sess || sess.done) return
+        val s = stt ?: return
+        sess.startedAt = System.currentTimeMillis()
+        runCatching { if (sess.injected != null) inject(sess) else s.request() }
+            .onFailure { BatonLog.w(TAG, "듣기 시작 실패: ${it.message}"); finish(false) }
+    }
+
+    /** 시작 직후 엔진 오류는 남은 세션 충돌일 수 있어 한 번만 다시 연다. 그 밖에는 듣기를 끝낸다 */
+    private fun onEngineError() {
+        val sess = session ?: return
+        if (sess.done) return
+        if (!sess.retried && System.currentTimeMillis() - sess.startedAt < 3_000) {
+            sess.retried = true
+            BatonLog.i(TAG, "음성 인식 다시 시작")
+            runCatching { stt?.stop() }
+            main.postDelayed({ begin(sess) }, 500)
+            return
+        }
+        finish(false)
     }
 
     private fun heard(text: String) {
@@ -96,16 +125,13 @@ class ReceiptListener(context: Context) {
 
     private fun injectFile(): File? = if (BatonLog.enabled) File(appContext.filesDir, "stt_inject.pcm") else null
 
-    private fun inject() {
-        val f = injectFile() ?: return
-        if (!f.exists()) return
+    private fun inject(sess: Session) {
+        val bytes = sess.injected ?: return
         val s = stt ?: return
         Thread {
             runCatching {
-                val bytes = f.readBytes()
-                f.delete()
                 var i = 0
-                while (i < bytes.size && session != null) {
+                while (i < bytes.size && session === sess) {
                     val end = minOf(i + 3200, bytes.size)
                     s.sendAudio(bytes.copyOfRange(i, end))
                     i = end
