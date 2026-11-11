@@ -227,7 +227,10 @@ t18() { # 음성 수령: 탑승 안내가 끝나면 8초만 듣고 "받았어요
   park_and_exit
   $ADB push "$(cygpath -w "$pcm")" /data/local/tmp/receive_ko.pcm >/dev/null
   $ADB shell "run-as $PKG --user 10 cp /data/local/tmp/receive_ko.pcm files/stt_inject.pcm"
-  board; sleep 24
+  board
+  # 탑승 안내(약 12초) → 듣기 → 인식까지 걸리는 시간이 매번 달라 최대 40초까지 기다린다
+  for _ in $(seq 1 40); do logs | grep -q "음성으로 수령" && break; sleep 1; done
+  sleep 2
   expect_log "안내 끝에 음성 수령 권유" "받으셨으면 \"받았어요\"라고 말씀해 주세요" &&
   expect_log "음성으로 수령 기록" "음성으로 수령" &&
   expect_ui "수령 시각 표시" "수령 확인"
