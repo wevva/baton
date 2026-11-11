@@ -54,7 +54,7 @@ scene "다음 운전자가 탑니다 — 화면과 음성으로 한 번 안내�
 q seat driver true
 for _ in $(seq 1 40); do timeout 10 "$ADB" logcat -d -s BatonListen:* | grep -q "듣기 시작" && break; sleep 0.5; done
 echo -e "$(now)	VOICE" >> "$SCENES"
-scene "안내가 끝나면 \"받았어요\" 한마디로 수령 기록 — 손은 운전대에 (출발 전 검토·서명, DVIR 원칙)"
+scene "안내가 끝나면 \"받았어요\" 한마디로 수령 기록 — 손은 운전대에 (출발 전 검토·서명, DVIR 원칙 · 운전자 목소리는 재현)"
 sleep 8
 scene "ESC를 다시 켜면 차량 신호로 해결을 확인하고 스스로 지웁니다"
 q lamp ESCOff Off; sleep 9
