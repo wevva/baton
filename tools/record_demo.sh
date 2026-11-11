@@ -44,12 +44,20 @@ scene "내리기 전 화면: 다음 사람에게 넘어갈 것을 미리 보여 
 sleep 7
 scene "운전자가 내립니다 — 운전석이 비면 인계를 저장합니다"
 q seat driver false; sleep 4; q soc 58; sleep 4
+# 음성 수령 장면: 운전자 목소리 대신 "받았어요" 녹음을 음성 인식에 넣는다(디버그 빌드 전용 주입). 영상에는 같은 소리를 합성한다
+PCM="$HERE/../build/test_audio/receive_ko.pcm"
+[ -f "$PCM" ] || powershell -NoProfile -ExecutionPolicy Bypass -File "$(cygpath -w "$HERE/make_test_audio.ps1")" >/dev/null
+timeout 30 "$ADB" push "$(cygpath -w "$PCM")" /data/local/tmp/receive_ko.pcm >/dev/null
+timeout 30 "$ADB" shell "run-as com.baton.app --user 10 cp /data/local/tmp/receive_ko.pcm files/stt_inject.pcm"
+timeout 30 "$ADB" logcat -c
 scene "다음 운전자가 탑니다 — 화면과 음성으로 한 번 안내합니다"
-q seat driver true; sleep 20
+q seat driver true
+for _ in $(seq 1 40); do timeout 10 "$ADB" logcat -d -s BatonListen:* | grep -q "듣기 시작" && break; sleep 0.5; done
+echo -e "$(now)	VOICE" >> "$SCENES"
+scene "안내가 끝나면 \"받았어요\" 한마디로 수령 기록 — 손은 운전대에 (출발 전 검토·서명, DVIR 원칙)"
+sleep 8
 scene "ESC를 다시 켜면 차량 신호로 해결을 확인하고 스스로 지웁니다"
 q lamp ESCOff Off; sleep 9
-scene "'받았어요' 한 번 = 출발 전 검토·서명 (DVIR 원칙)"
-tap "받았어요"; sleep 6
 scene "받는 사람의 언어로 — 일본어 (한국어·영어·일본어·중국어)"
 tap "JA"; sleep 6; tap "KO"; sleep 3
 scene "안전 항목을 남긴 채 출발하면 한 번만 음성으로 알립니다"

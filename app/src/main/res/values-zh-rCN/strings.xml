@@ -120,4 +120,7 @@
     <plurals name="voice_intro">
         <item quantity="other">这里是接力。出发前有%1$d项需要了解。</item>
     </plurals>
+    <string name="voice_receive_prompt">确认后请说“已接收”。</string>
+    <string name="voice_received">已记录接收。</string>
+    <string name="listening_hint">🎤 正在聆听…请说“已接收”</string>
 </resources>

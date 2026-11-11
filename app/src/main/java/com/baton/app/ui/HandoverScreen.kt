@@ -209,6 +209,11 @@ private fun Handover(
                             .clickable { onReceive() }
                             .padding(horizontal = 40.dp, vertical = 20.dp),
                     )
+                    // 탑승 안내 직후 몇 초만 듣는다 — 마이크가 열려 있다는 것을 항상 화면에 보인다
+                    if (ui.listening) {
+                        Spacer(Modifier.height(12.dp))
+                        Text(t.str(R.string.listening_hint), color = C.done, fontSize = 22.sp)
+                    }
                 } else {
                     val time = java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT, t.locale).format(java.util.Date(at))
                     Text("✓ " + t.str(R.string.received_at, time), color = C.done, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)

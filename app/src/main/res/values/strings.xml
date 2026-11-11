@@ -126,4 +126,7 @@
         <item quantity="one">Baton here. There is %1$d thing to know before you drive.</item>
         <item quantity="other">Baton here. There are %1$d things to know before you drive.</item>
     </plurals>
+    <string name="voice_receive_prompt">If you\'ve got it, just say \"got it\".</string>
+    <string name="voice_received">Receipt recorded.</string>
+    <string name="listening_hint">🎤 Listening… say \"got it\"</string>
 </resources>

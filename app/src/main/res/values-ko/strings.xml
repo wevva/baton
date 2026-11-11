@@ -120,4 +120,7 @@
     <plurals name="voice_intro">
         <item quantity="other">바통입니다. 출발 전에 알아 두실 것이 %1$d가지 있어요.</item>
     </plurals>
+    <string name="voice_receive_prompt">받으셨으면 \"받았어요\"라고 말씀해 주세요.</string>
+    <string name="voice_received">수령을 기록했어요.</string>
+    <string name="listening_hint">🎤 듣는 중… \"받았어요\"라고 말씀하세요</string>
 </resources>

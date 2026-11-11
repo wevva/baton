@@ -12,6 +12,8 @@ ap = argparse.ArgumentParser()
 ap.add_argument("raw"); ap.add_argument("out")
 ap.add_argument("--ffmpeg", default=r"C:\dev\tools\ffmpeg\ffmpeg.exe")
 ap.add_argument("--latency", type=float, default=0.5, help="screenrecord가 실제로 첫 프레임을 찍기까지 걸린 시간(초)")
+ap.add_argument("--voice", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "build", "test_audio", "receive_ko.wav"),
+                help="VOICE 표시 시각에 얹을 운전자 목소리(재현). 음성 인식에는 같은 소리를 직접 넣었다")
 a = ap.parse_args()
 R = a.raw
 F = a.ffmpeg
@@ -23,7 +25,8 @@ for line in open(os.path.join(R, "scenes.tsv"), encoding="utf-8"):
     t, name = line.rstrip("\n").split("\t")
     scenes.append((float(t) - v0, name))
 end = [t for t, n in scenes if n == "END"][0] + 1.5
-scenes = [(t, n) for t, n in scenes if n != "END"]
+voice_at = [t for t, n in scenes if n == "VOICE"]
+scenes = [(t, n) for t, n in scenes if n not in ("END", "VOICE")]
 
 TITLE, OUTRO = 5.0, 7.0
 
@@ -99,10 +102,18 @@ print(f"음성 최대 {20 * math.log10(peak):.1f} dBFS → +{gain_db:.1f} dB")
 V = ["-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p", "-r", "30"]
 A = ["-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-ac", "2"]
 # 1) 본편: 화면 0~end, 음성은 (v0 - a0)만큼 앞을 잘라 맞춤, 음량 정규화, 자막
-run(["-i", os.path.join(R, "screen.mp4"), "-ss", f"{v0 - a0:.3f}", "-i", os.path.join(R, "audio.wav"),
-     "-t", f"{end:.3f}", "-map", "0:v", "-map", "1:a",
+#    VOICE 시각이 있으면 운전자 목소리(재현)를 0.5초 뒤에 얹는다 (인식기에 넣은 소리와 같은 파일, 앞 무음 0.5초)
+inputs = ["-i", os.path.join(R, "screen.mp4"), "-ss", f"{v0 - a0:.3f}", "-i", os.path.join(R, "audio.wav")]
+af = f"[1:a]volume={gain_db:.1f}dB,aresample=48000,aformat=channel_layouts=stereo[car]"
+if voice_at and os.path.exists(a.voice):
+    inputs += ["-i", a.voice]
+    ms = int((voice_at[0] + 0.5) * 1000)
+    af += f";[2:a]aresample=48000,aformat=channel_layouts=stereo,volume=6dB,adelay={ms}|{ms}[drv];[car][drv]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.9[a]"
+else:
+    af += ";[car]alimiter=limit=0.9[a]"
+run(inputs + ["-t", f"{end:.3f}", "-map", "0:v", "-map", "[a]",
      "-vf", f"scale=1920:1080,subtitles='{esc(os.path.join(work, 'cap.ass'))}'",
-     "-af", f"volume={gain_db:.1f}dB,alimiter=limit=0.9", *V, *A, os.path.join(work, "main.mp4")])
+     "-filter_complex", af, *V, *A, os.path.join(work, "main.mp4")])
 # 2) 시작·끝 카드
 for name, dur in (("title", TITLE), ("outro", OUTRO)):
     run(["-f", "lavfi", "-i", f"color=c=0x101418:s=1920x1080:d={dur}:r=30",

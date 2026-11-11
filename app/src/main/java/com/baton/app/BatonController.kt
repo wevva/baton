@@ -14,6 +14,7 @@ import com.baton.app.vehicle.ProfileDiscovery
 import com.baton.app.vehicle.VehicleProfile
 import com.baton.app.vehicle.VehicleSignals
 import com.baton.app.vehicle.VehicleSnapshot
+import com.baton.app.voice.ReceiptListener
 import com.baton.app.voice.Speaker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -37,6 +38,8 @@ data class UiState(
     val undoable: OpenItem? = null,
     /** 출발까지 끝난 인계 기록 (최근 것이 먼저) */
     val history: List<HandoverMachine.Handover> = emptyList(),
+    /** 탑승 안내 직후 "받았어요"를 듣는 중 */
+    val listening: Boolean = false,
 )
 
 /**
@@ -52,6 +55,10 @@ class BatonController(
     val ui: StateFlow<UiState> = _ui.asStateFlow()
 
     private val speaker = Speaker(context)
+    private val listener = ReceiptListener(context)
+    /** 탑승 안내가 끝나면 수령 음성을 들을지 */
+    private var listenAfterSpeech = false
+    private var listenGuard: Job? = null
     private val detector = Detector()
     private val announcer = Announcer()
     private val store = HandoverStore(context)
@@ -64,6 +71,7 @@ class BatonController(
     fun start() {
         if (started) return
         started = true
+        speaker.onDone = { scope.launch { onSpeechDone() } }
         scope.launch {
             val p = discoverWithRetry()
             profile = p
@@ -122,6 +130,7 @@ class BatonController(
             BatonLog.i(TAG, "상태: ${before::class.simpleName} → ${after::class.simpleName} (남은 일=${openCount(after)})")
         }
         if (before != after) store.save(after, m.history)
+        if (after !is State.Boarded) stopListening()
         speak(announcer.decide(before, after))
     }
 
@@ -156,8 +165,40 @@ class BatonController(
     /** 바통 수령증 1탭 */
     fun receive() {
         val m = machine ?: return
+        stopListening()
         m.receive(System.currentTimeMillis())
         commit(m)
+    }
+
+    /** 탑승 안내가 끝난 직후에만 잠깐 듣는다 (항상 듣지 않음) */
+    private fun onSpeechDone() {
+        if (!listenAfterSpeech) return
+        listenAfterSpeech = false
+        listenGuard?.cancel()
+        val s = _ui.value.state
+        if (s !is State.Boarded || s.handover.receivedAtMs != null) return
+        val locale = _ui.value.locale
+        _ui.value = _ui.value.copy(listening = true)
+        listener.listen(
+            locale,
+            onMatch = {
+                _ui.value = _ui.value.copy(listening = false)
+                machine?.let { m ->
+                    m.receive(System.currentTimeMillis())
+                    commit(m)
+                    BatonLog.i(TAG, "음성으로 수령")
+                    speaker.say(ItemText(context, locale, profile.driverSeat).str(R.string.voice_received), locale)
+                }
+            },
+            onEnd = { _ui.value = _ui.value.copy(listening = false) },
+        )
+    }
+
+    private fun stopListening() {
+        listenAfterSpeech = false
+        listenGuard?.cancel()
+        listener.stop()
+        if (_ui.value.listening) _ui.value = _ui.value.copy(listening = false)
     }
 
     private fun commit(m: HandoverMachine) {
@@ -184,9 +225,19 @@ class BatonController(
                     text.plural(R.plurals.voice_depart_safety, e.items.size, e.items.size) + " " + spoken(text, e.items)
             }
         }
-        val msg = msgs.joinToString(" ")
+        // 넘겨받을 것이 있는 탑승 안내 끝에 음성 수령을 권한다 (음성 인식이 되는 언어에서만)
+        val intro = events.filterIsInstance<Announcer.Event.Intro>().firstOrNull()
+        val askReceipt = intro != null && intro.open.isNotEmpty() && listener.canListen(locale)
+        val body = msgs.joinToString(" ")
+        val msg = if (askReceipt) body.trimEnd('.', ' ') + ". " + text.str(R.string.voice_receive_prompt) else body
         BatonLog.i(TAG, "안내: $msg")
-        speaker.say(msg, locale)
+        val said = speaker.say(msg, locale)
+        if (askReceipt && said) {
+            listenAfterSpeech = true
+            // 음성 엔진이 끝 신호를 주지 않으면 듣지 않는다 (엉뚱한 때 마이크를 열지 않도록)
+            listenGuard?.cancel()
+            listenGuard = scope.launch { delay(30_000); listenAfterSpeech = false }
+        }
     }
 
     /** 음성은 짧게: 앞의 3건만 읽고 나머지는 "외 N건" (운전석 음성 피로 방지) */
@@ -198,6 +249,7 @@ class BatonController(
 
     fun stop() {
         signals?.stop()
+        listener.release()
         speaker.release()
     }
 

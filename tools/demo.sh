@@ -5,7 +5,8 @@
 #  2) 운전자가 ESC(차체 자세 제어)를 끈 채 주차하고 하차
 #  3) 다음 운전자 탑승 → 바통이 '보이지 않는 것'을 화면+음성으로 안내 (이미 꺼진 경고라 계기판엔 안 보임)
 #  4) 다음 운전자가 ESC를 다시 켬 → 차량 신호로 확인되는 순간 "해제 확인"
-#  5) '받았어요'(수령증)는 화면에서 직접 누름 → 출발
+#  5) '받았어요'(수령증): 탑승 안내가 끝나면 8초 동안 말로, 또는 화면에서 누름 → 출발
+#  VOICE=inject bash tools/demo.sh  → 발표자 대신 "받았어요" 녹음을 음성 인식에 넣음(디버그 빌드 전용, 마이크 문제 대비)
 set -e
 P=${1:-4}
 DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -27,13 +28,22 @@ vc seat driver false; sleep "$P"
 say "   (시간 경과, 배터리 62% → 58%)"
 vc soc 58; sleep 2
 
-say "3. 다음 운전자 탑승 → 바통이 계기판에 남지 않은 것까지 안내"
+if [ "${VOICE:-}" = "inject" ]; then
+  export MSYS_NO_PATHCONV=1
+  ADB="${ADB:-$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe}"
+  PCM="$DIR/../build/test_audio/receive_ko.pcm"
+  [ -f "$PCM" ] || powershell -NoProfile -ExecutionPolicy Bypass -File "$(cygpath -w "$DIR/make_test_audio.ps1")" >/dev/null
+  "$ADB" push "$(cygpath -w "$PCM")" /data/local/tmp/receive_ko.pcm >/dev/null
+  "$ADB" shell "run-as com.baton.app --user 10 cp /data/local/tmp/receive_ko.pcm files/stt_inject.pcm"
+fi
+
+say "3. 다음 운전자 탑승 → 바통이 계기판에 남지 않은 것까지 안내 (안내 끝에 \"받았어요\"라고 말하기)"
 vc seat driver true; sleep $((P * 3))
 
 say "4. 다음 운전자가 ESC를 다시 켬 → 신호로 확인되는 순간 '해제 확인'"
 vc lamp ESCOff Off; sleep "$P"
 
-say "5. (화면에서 '받았어요' 누르기) → 출발"
+say "5. (말로 못 했으면 화면에서 '받았어요' 누르기) → 출발"
 sleep "$P"
 vc gear Drive; sleep "$P"
 say "끝"

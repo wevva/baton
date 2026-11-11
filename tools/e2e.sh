@@ -219,6 +219,29 @@ t17() { # 지난 운행 기록(꺼진 경고)은 확인 처리로 내릴 수 있
   expect_ui "되돌리기 표시" "되돌리기"
 }
 
+t18() { # 음성 수령: 탑승 안내가 끝나면 8초만 듣고 "받았어요"로 수령 기록 (마이크 대신 녹음 파일 주입 — 디버그 빌드 전용)
+  local pcm="$DIR/../build/test_audio/receive_ko.pcm"
+  [ -f "$pcm" ] || powershell -NoProfile -ExecutionPolicy Bypass -File "$(cygpath -w "$DIR/make_test_audio.ps1")" >/dev/null
+  fresh_start
+  vc lamp TPMS On; sleep 1; vc lamp TPMS Off; sleep 1
+  park_and_exit
+  $ADB push "$(cygpath -w "$pcm")" /data/local/tmp/receive_ko.pcm >/dev/null
+  $ADB shell "run-as $PKG --user 10 cp /data/local/tmp/receive_ko.pcm files/stt_inject.pcm"
+  board; sleep 24
+  expect_log "안내 끝에 음성 수령 권유" "받으셨으면 \"받았어요\"라고 말씀해 주세요" &&
+  expect_log "음성으로 수령 기록" "음성으로 수령" &&
+  expect_ui "수령 시각 표시" "수령 확인"
+}
+
+t19() { # 아무 말도 없으면 8초 뒤 듣기를 끝내고 버튼은 그대로 (수령으로 치지 않음)
+  fresh_start
+  $ADB shell "run-as $PKG --user 10 rm -f files/stt_inject.pcm"
+  vc lamp TPMS On; sleep 1; vc lamp TPMS Off; sleep 1
+  park_and_exit; board; sleep 26
+  expect_no_log "말이 없으면 수령 아님" "음성으로 수령" &&
+  expect_ui "받았어요 버튼 유지" "받았어요"
+}
+
 run E2E-01 "기본: 지난 운행 경고 2번 + ESC 꺼짐 인계 → 안내 → ESC 해제 확인 → 출발" t01
 run E2E-02 "문제 없는 운행은 '넘겨받을 것 없음'" t02
 run E2E-03 "동승자가 남은 채 운전 교대해도 인계" t03
@@ -236,6 +259,8 @@ run E2E-14 "지금 켜진 안전 경고는 눌러도 숨겨지지 않음" t14
 run E2E-15 "홈 화면으로 나가도 감지·안내 계속 (앱 안 열어도 동작)" t15
 run E2E-16 "보안: 외부에서 서비스·수신기 강제 호출 불가" t16
 run E2E-17 "지난 운행 기록은 확인 처리 가능 (되돌리기 표시)" t17
+run E2E-18 "음성 수령: 안내 뒤 \"받았어요\"라고 말하면 수령 기록" t18
+run E2E-19 "말이 없으면 8초 뒤 듣기 종료, 수령으로 치지 않음" t19
 
 echo
 echo "결과: 통과 $PASS / 실패 $FAIL ${FAILED[*]}"

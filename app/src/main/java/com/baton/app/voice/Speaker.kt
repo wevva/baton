@@ -19,13 +19,16 @@ class Speaker(context: Context) {
     @Volatile private var ready = false
     @Volatile private var lastInitAt = 0L
 
+    /** 한 안내가 다 재생됐을 때 (음성 엔진 스레드에서 불림) */
+    @Volatile var onDone: (() -> Unit)? = null
+
     init {
         initialize()
         runCatching {
             tts.addEventListener(object : EventListener {
                 override fun onStart() { BatonLog.i(TAG, "TTS onStart") }
                 override fun onReady() { BatonLog.i(TAG, "TTS onReady") }
-                override fun onDone() { BatonLog.i(TAG, "TTS onDone") }
+                override fun onDone() { BatonLog.i(TAG, "TTS onDone"); onDone?.invoke() }
                 override fun onError(error: ErrorType) { BatonLog.w(TAG, "TTS onError $error") }
                 override fun onStop() { BatonLog.i(TAG, "TTS onStop") }
                 override fun onUpdatedRms(rms: Double) {}
@@ -49,16 +52,17 @@ class Speaker(context: Context) {
 
     fun canSpeak(locale: Locale) = ready && locale.language in VOICE_LANGUAGES
 
-    fun say(text: String, locale: Locale) {
-        if (locale.language !in VOICE_LANGUAGES) return
+    /** @return 재생을 요청했으면 true */
+    fun say(text: String, locale: Locale): Boolean {
+        if (locale.language !in VOICE_LANGUAGES) return false
         if (!ready && System.currentTimeMillis() - lastInitAt > 10_000) initialize()
-        if (!canSpeak(locale)) return
-        runCatching {
+        if (!canSpeak(locale)) return false
+        return runCatching {
             tts.setLocale(if (locale.language == "ko") Locale.KOREA else Locale.US)
             // 두 번째 인자 = 이 문장으로 텍스트 스트림이 끝났는지(isFinal). false면 엔진이 문장을 계속 열어 두어
             // 다음 안내(해제 확인·출발 경고)가 재생되지 않는다 (2026-11-05 에뮬레이터 로그 streamTextIsFinal 확인)
             tts.speak(text, true)
-        }.onFailure { BatonLog.w(TAG, "발화 실패: ${it.message}") }
+        }.onFailure { BatonLog.w(TAG, "발화 실패: ${it.message}") }.isSuccess
     }
 
     fun release() { runCatching { tts.release() } }

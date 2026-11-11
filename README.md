@@ -41,6 +41,7 @@
 3. **탑승**: 다음 운전자가 앉으면 화면과 음성으로 한 번 안내합니다("출발 전에 알아 두실 것이 2가지 있어요"). 문제가 없으면 "넘겨받을 것이 없어요".
 4. **해결**: ESC를 다시 켜는 등 신호로 해결이 확인되면 "해제 확인"과 함께 지웁니다. 지난 운행 기록은 확인 처리로 내리고, **지금 켜진 안전 경고는 숨길 수 없습니다.**
 5. **수령증**: "받았어요" 1탭 = DVIR의 '다음 운전자 검토·서명'. 카셰어링에서는 "받기 전부터 있던 경고"의 기록이 됩니다.
+   손을 쓰지 않아도 됩니다. 탑승 안내가 끝난 직후 8초 동안 **"받았어요"라고 말하면** 수령이 기록됩니다(Pleos SpeechToText, 온디바이스). "안 받았어요"처럼 부정어가 섞이면 수령으로 치지 않습니다.
 6. **출발**: 지금 켜진 안전 경고를 남긴 채 출발하면 한 번만 음성으로 알리고, 인계는 이력으로 보관합니다.
 
 앱을 열지 않아도 동작합니다. 차량이 켜지면 바통이 스스로 시작합니다(부팅 수신 + 감시 서비스).
@@ -57,6 +58,7 @@
 - **암호화 저장**: AES-256-GCM, 키는 Android Keystore. 변조되면 감지해 버립니다.
 - **최소 권한·오프라인**: 인터넷 권한 없음, 백업·기기 간 이전 차단, 서비스·수신기 외부 공개 안 함.
 - **release 강화**: R8 난독화, 로그 완전 차단, Gradle 배포판 체크섬 고정.
+- **대화를 듣지 않음**: 음성 수령은 탑승 안내 직후 8초만 듣고, 인식은 차 안에서만 합니다. 소리·문장은 저장하지 않고, 바통에는 녹음 권한이 없습니다(마이크는 Pleos 음성 서비스가 열고, 듣는 동안 상태바·화면에 표시).
 - 경고등 읽기 권한 `PRIVATE_CAR_SAFETY`는 Pleos에서 normal 등급으로 제공됩니다(지원·허용되지 않는 차량에서는 자동으로 꺼짐).
 - 상세: [docs/SECURITY.md](docs/SECURITY.md)
 
@@ -71,7 +73,7 @@ vehicle/   VehicleProfile(차량 구성) · ProfileDiscovery(자동 인식) · D
 handover/  Telltales(경고등 분류표, DVIR 기준) · OpenItem · Detector · HandoverMachine(운행 기록·인계) · Announcer(음성 판단) · HandoverCodec · HandoverStore(암호화 저장)
 security/  SecureFile(AES-256-GCM + Keystore) · BatonLog(release 로그 차단)
 i18n/      ItemText(받는 사람 언어로 문장) · TelltaleNames(생성됨) · AppLanguage
-voice/     Speaker(Pleos TTS, 온디바이스)
+voice/     Speaker(Pleos TTS, 온디바이스) · ReceiptListener(Pleos STT, 음성 수령) · ReceiptPhrase(수령 표현 판단)
 ui/        HandoverScreen · HistoryScreen
 BatonApp · BatonController · HandoverService(감시) · BootReceiver(자동 시작)
 ```
@@ -107,7 +109,7 @@ python tools/make_video.py out/ demo.mp4   # 자막·시작/끝 카드 합성 (f
 
 | 무엇 | 출처 | 라이선스 |
 |---|---|---|
-| Pleos Vehicle SDK 2.3.2, TextToSpeech SDK 3.3.1 | https://nexus-playground.pleos.ai/repository/maven-releases/ | 공모전 제공 SDK |
+| Pleos Vehicle SDK 2.3.2, TextToSpeech SDK 3.3.1, SpeechToText SDK 3.3.1 | https://nexus-playground.pleos.ai/repository/maven-releases/ | 공모전 제공 SDK |
 | Pleos SDK 문서, 앱 심사 가이드 | https://document.pleos.ai | — |
 | Pleos 샘플 앱 README (사용 순서 참고, 코드 미사용) | https://github.com/Pleos-Playground/pleos-sample-vehicle-app | 라이선스 미표기 → 코드 사용 안 함 |
 | 49 CFR 396.11·396.13 (DVIR) | https://www.law.cornell.edu/cfr/text/49/396.11 , https://www.law.cornell.edu/cfr/text/49/396.13 | 공공 법령 |
@@ -115,5 +117,7 @@ python tools/make_video.py out/ demo.mp4   # 자막·시작/끝 카드 합성 (f
 | JUnit 4.13.2, org.json (테스트) | https://junit.org/junit4/ , https://github.com/stleary/JSON-java | EPL-1.0, Public Domain |
 | Gson R8 규칙 | https://github.com/google/gson/blob/main/Troubleshooting.md | Apache-2.0 |
 | NHTSA 주의분산 가이드라인, Android for Cars 품질 가이드, OWASP MASVS | https://www.nhtsa.gov/sites/nhtsa.gov/files/811781.pdf , https://developer.android.com/docs/quality-guidelines/car-app-quality , https://mas.owasp.org/ | 공공 문서·CC BY-SA |
+
+E2E 음성 수령 시험용 "받았어요" 소리는 Windows 내장 한국어 음성(Microsoft Heami)으로 `tools/make_test_audio.ps1`이 그때그때 만들며, 저장소에는 넣지 않습니다.
 
 앱 아이콘과 화면 디자인은 직접 제작했습니다.
