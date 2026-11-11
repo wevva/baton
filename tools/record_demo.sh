@@ -62,7 +62,7 @@ scene "받는 사람의 언어로 — 일본어 (한국어·영어·일본어·�
 tap "JA"; sleep 6; tap "KO"; sleep 3
 scene "안전 항목을 남긴 채 출발하면 한 번만 음성으로 알립니다"
 q gear Drive; sleep 14
-scene "주행 중에는 화면을 간단하게 줄입니다"
+scene "주행 중에는 Pleos가 앱 화면을 막습니다 — 바통은 출발할 때 음성으로 한 번만 알립니다"
 sleep 6
 echo -e "$(now)\tEND" >> "$SCENES"
 

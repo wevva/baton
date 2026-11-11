@@ -40,7 +40,7 @@ class ReceiptListener(context: Context) {
                 override fun onStartedRecognition() {}
                 override fun onEndedRecognition() {}
                 override fun onError(error: ErrorType) { BatonLog.w(TAG, "인식 오류 $error"); main.post { finish(false) } }
-                override fun onReady() { inject() }
+                override fun onReady() {}
                 override fun onUpdatedRms(rms: Double) {}
             })
             s.initialize(object : OnInitializeListener {
@@ -60,7 +60,8 @@ class ReceiptListener(context: Context) {
         val sess = Session(locale.language, onMatch, onEnd).also { session = it }
         runCatching {
             s.setLocale(if (locale.language == "ko") Locale.KOREA else Locale.US)
-            s.request()
+            // 개발용 주입 파일이 있으면 마이크를 열지 않고 그 소리만 넣는다 (에뮬레이터 마이크 오류와 섞이지 않게)
+            if (injectFile()?.exists() == true) inject() else s.request()
             BatonLog.i(TAG, "수령 음성 듣기 시작 (${LISTEN_MS / 1000}초)")
         }.onFailure { BatonLog.w(TAG, "듣기 시작 실패: ${it.message}"); finish(false); return }
         main.postDelayed({ if (session === sess) finish(false) }, LISTEN_MS)
@@ -93,9 +94,10 @@ class ReceiptListener(context: Context) {
         sess.onEnd()
     }
 
+    private fun injectFile(): File? = if (BatonLog.enabled) File(appContext.filesDir, "stt_inject.pcm") else null
+
     private fun inject() {
-        if (!BatonLog.enabled) return
-        val f = File(appContext.filesDir, "stt_inject.pcm")
+        val f = injectFile() ?: return
         if (!f.exists()) return
         val s = stt ?: return
         Thread {
@@ -107,7 +109,8 @@ class ReceiptListener(context: Context) {
                     val end = minOf(i + 3200, bytes.size)
                     s.sendAudio(bytes.copyOfRange(i, end))
                     i = end
-                    Thread.sleep(100)
+                    // 실시간(100ms)보다 빠르게 넣어도 인식된다 (시험 시간 단축)
+                    Thread.sleep(20)
                 }
                 s.completeAudioSend()
             }.onFailure { BatonLog.w(TAG, "주입 실패: ${it.message}") }

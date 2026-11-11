@@ -35,12 +35,13 @@ def at(prefix):
 
 VOICE = at("VOICE")
 # (시작, 길이, 위 큰 문구, 아래 설명) — 영상 시각 기준
+# 화면 배치: cluster = 계기판 윗부분(경고등·기어), app = 바통 화면(왼쪽 요약 + 오른쪽 카드 위아래로)
 CUTS = [
-    (at("운행 중"), 4.5, "어젯밤 켜졌다 꺼진 경고", "운행 중 타이어 공기압 경고가 켜졌다 꺼집니다"),
-    (at("운전자가 ESC"), 3.0, "ESC도 끈 채로 주차", "차체 자세 제어를 끄고 내립니다"),
-    (at("다음 운전자가"), 6.0, "아침에 타는 사람은 모릅니다", "그래서 바통이 탑승하자마자 알려 줍니다"),
-    (VOICE - 1.5, 5.5, "\"받았어요\" 한마디면 끝", "손은 운전대에 — 수령 시각이 기록됩니다"),
-    (at("ESC를 다시"), 4.5, "고치면 스스로 지웁니다", "차량 신호로 해결을 확인"),
+    (at("운행 중"), 4.5, "cluster", "어젯밤 켜졌다 꺼진 경고", "운행 중 타이어 공기압 경고등이 켜졌다 꺼집니다"),
+    (at("운전자가 ESC"), 3.0, "cluster", "ESC도 끈 채로 주차", "차체 자세 제어를 끄고 내립니다"),
+    (at("다음 운전자가"), 6.0, "app", "아침에 타는 사람은 모릅니다", "그래서 바통이 탑승하자마자 알려 줍니다"),
+    (VOICE - 1.5, 5.5, "app", "\"받았어요\" 한마디면 끝", "손은 운전대에 — 수령 시각이 기록됩니다"),
+    (at("ESC를 다시"), 4.5, "app", "고치면 스스로 지웁니다", "차량 신호로 해결을 확인"),
 ]
 HOOK, OUTRO = 3.0, 3.5
 
@@ -99,8 +100,14 @@ run(["-ss", f"{v0 - a0:.3f}", "-i", os.path.join(R, "audio.wav"), "-i", a.voice,
 V = ["-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p", "-r", "30"]
 A = ["-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-ac", "2"]
 BG = "0x101418"
-# 바통 앱 영역 (녹화 1920x1080 기준): x 640~1900, y 70~970 → 가로 1080으로 축소(높이 771)
-CROP = "crop=1260:900:640:70,scale=1080:771"
+# 녹화 1920x1080 기준 영역
+LAYOUT = {
+    # 계기판 윗부분(경고등·기어·안전벨트) 640x300 → 1080x506
+    "cluster": "[0:v]crop=640:300:0:0,scale=1080:506[x];[2:v][x]overlay=0:640:shortest=1",
+    # 바통 왼쪽(제목·에너지·수령) 500x330 → 880x581, 오른쪽 카드 760x260 → 1064x364
+    "app": "[0:v]split[s1][s2];[s1]crop=460:330:650:95,scale=880:631[l];[s2]crop=775:260:1125:160,scale=1064:357[r];"
+           "[2:v][l]overlay=100:470:shortest=1[t];[t][r]overlay=8:1115:shortest=1",
+}
 parts = []
 
 # 2) 첫 카드
@@ -112,15 +119,15 @@ run(["-f", "lavfi", "-i", f"color=c={BG}:s=1080x1920:d={HOOK}:r=30", "-f", "lavf
      "-t", f"{HOOK}", "-vf", f"subtitles='{esc(os.path.join(work, 'hook.ass'))}'", *V, *A, p])
 
 # 3) 장면들
-for i, (start, dur, big, mid) in enumerate(CUTS, 1):
+for i, (start, dur, mode, big, mid) in enumerate(CUTS, 1):
     sub = os.path.join(work, f"c{i}.ass")
-    ass(sub, [("Big", 330, big), ("Mid", 1560, mid), ("Brand", 1780, "바통 · Pleos Connect 실제 동작")], dur)
+    ass(sub, [("Big", 300, big), ("Mid", 1600, mid), ("Brand", 1780, "바통 · Pleos Connect 실제 동작")], dur)
     p = os.path.join(work, f"p{i}.mp4"); parts.append(p)
     run(["-ss", f"{start:.3f}", "-t", f"{dur:.3f}", "-i", os.path.join(R, "screen.mp4"),
          "-ss", f"{start:.3f}", "-t", f"{dur:.3f}", "-i", full,
          "-f", "lavfi", "-i", f"color=c={BG}:s=1080x1920:r=30",
          "-filter_complex",
-         f"[0:v]{CROP}[app];[2:v][app]overlay=0:575:shortest=1,subtitles='{esc(sub)}'[v]",
+         f"{LAYOUT[mode]},subtitles='{esc(sub)}'[v]",
          "-map", "[v]", "-map", "1:a", "-t", f"{dur:.3f}", *V, *A, p])
 
 # 4) 끝 카드
