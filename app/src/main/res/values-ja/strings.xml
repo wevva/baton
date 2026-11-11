@@ -51,6 +51,20 @@
         <item quantity="other">安全に関わる項目が%1$d件残っています。</item>
     </plurals>
 
+    <string name="state_boarded">出発前の確認事項</string>
+    <string name="state_away">次の走行への引き継ぎを保存しました</string>
+    <string name="empty_handover">引き継ぎ事項はありません。前回の走行で異常はありませんでした。</string>
+    <string name="voice_none">バトンです。前回の走行から引き継ぐことはありません。</string>
+    <string name="hint_tap_to_ack">確認した項目はタップで消せます(点灯中の安全警告を除く)</string>
+    <string name="parked_hint">今降りると次の走行にこう伝わります:</string>
+    <string name="preview_setting">%1$s — 降りる前に戻せます</string>
+    <plurals name="voice_intro">
+        <item quantity="other">バトンです。出発前に確認していただきたいことが%1$d件あります。</item>
+    </plurals>
+    <string name="voice_receive_prompt">確認したら「受け取りました」と言ってください。</string>
+    <string name="voice_received">受け取りを記録しました。</string>
+    <string name="listening_hint">🎤 聞き取り中…「受け取りました」と言ってください</string>
+
     <string name="item_warning_on">%1$s警告灯が点灯しています</string>
     <string name="item_setting">%1$sの状態で引き継ぎました</string>
     <string name="item_engine_oil_low">エンジンオイルが不足しています — 出発前に点検してください</string>
@@ -89,7 +103,6 @@
     <string name="tt_WATER_SEPARATOR">燃料水分離器</string>
     <string name="tt_IMMOBILIZER">イモビライザー</string>
     <string name="tt_ESC_OFF">横滑り防止装置(ESC)オフ</string>
-    <string name="tt_PASSENGER_AIRBAG_OFF">助手席エアバッグオフ</string>
     <string name="tt_CHILD_PRESENCE_DETECTION_OFF">後席乗員検知オフ</string>
     <string name="tt_I_PEDAL">i-Pedal(ワンペダル)オン</string>
     <string name="tt_CREEP_OFF">クリープオフ</string>
@@ -109,18 +122,4 @@
     <plurals name="voice_more">
         <item quantity="other">ほか%1$d件あります。</item>
     </plurals>
-
-    <string name="state_boarded">出発前の確認事項</string>
-    <string name="state_away">次の走行への引き継ぎを保存しました</string>
-    <string name="empty_handover">引き継ぎ事項はありません。前回の走行で異常はありませんでした。</string>
-    <string name="voice_none">バトンです。前回の走行から引き継ぐことはありません。</string>
-    <string name="hint_tap_to_ack">確認した項目はタップで消せます(点灯中の安全警告を除く)</string>
-    <string name="parked_hint">今降りると次の走行にこう伝わります:</string>
-    <string name="preview_setting">%1$s — 降りる前に戻せます</string>
-    <plurals name="voice_intro">
-        <item quantity="other">バトンです。出発前に確認していただきたいことが%1$d件あります。</item>
-    </plurals>
-    <string name="voice_receive_prompt">確認したら「受け取りました」と言ってください。</string>
-    <string name="voice_received">受け取りを記録しました。</string>
-    <string name="listening_hint">🎤 聞き取り中…「受け取りました」と言ってください</string>
 </resources>

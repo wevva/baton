@@ -37,7 +37,7 @@ NAMES = {
     'WATER_SEPARATOR': ('Fuel water separator', '연료 수분 분리기', '燃料水分離器', '燃油水分离器'),
     'IMMOBILIZER': ('Immobilizer', '이모빌라이저', 'イモビライザー', '防盗锁止'),
     'ESC_OFF': ('Stability control (ESC) off', '차체 자세 제어(ESC) 꺼짐', '横滑り防止装置(ESC)オフ', '车身稳定控制(ESC)关闭'),
-    'PASSENGER_AIRBAG_OFF': ('Passenger airbag off', '조수석 에어백 꺼짐', '助手席エアバッグオフ', '副驾驶安全气囊关闭'),
+    # PASSENGER_AIRBAG_OFF: 넘기지 않음 (승객 구분 시스템이 자동 제어 — Telltales.kt 주석 참고)
     'CHILD_PRESENCE_DETECTION_OFF': ('Rear occupant detection off', '뒷좌석 승객 감지 꺼짐', '後席乗員検知オフ', '后排乘员检测关闭'),
     'I_PEDAL': ('i-Pedal (one-pedal driving) on', 'i-Pedal(원페달 주행) 켜짐', 'i-Pedal(ワンペダル)オン', 'i-Pedal单踏板驾驶开启'),
     'CREEP_OFF': ('Creep off', '크리프 꺼짐', 'クリープオフ', '蠕行关闭'),

@@ -65,7 +65,9 @@ object Telltales {
         "IMMOBILIZER" to Spec(Kind.FAULT, Dvir.POWERTRAIN, T),
         // 바꿔 둔 설정 — 다음 운전자가 모르면 거동이 달라짐
         "ESC_OFF" to Spec(Kind.SETTING, Dvir.BRAKES, S),            // 차체 자세 제어 꺼짐
-        "PASSENGER_AIRBAG_OFF" to Spec(Kind.SETTING, Dvir.EMERGENCY, S), // 카시트 떼고도 꺼져 있으면 위험
+        // PASSENGER_AIRBAG_OFF(조수석 에어백 OFF 표시)는 넘기지 않는다: 현대·기아 최신 차는 승객 구분 시스템(ODS)이
+        // 지금 조수석에 앉은 사람을 보고 자동으로 켜고 끄므로 '앞사람이 남긴 설정'이 아니고, 실내에서 보인다.
+        // 넘기면 조수석이 빌 때마다 숨길 수 없는 안전 항목이 생긴다 (2026-11-11 기아 취급설명서 ODS 항목 확인)
         "CHILD_PRESENCE_DETECTION_OFF" to Spec(Kind.SETTING, Dvir.EMERGENCY, T),
         "I_PEDAL" to Spec(Kind.SETTING, Dvir.DRIVING_AID, T),        // 원페달: 가속 페달만 떼도 강하게 감속
         "CREEP_OFF" to Spec(Kind.SETTING, Dvir.DRIVING_AID, T),      // 브레이크 떼도 앞으로 안 감

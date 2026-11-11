@@ -51,6 +51,20 @@
         <item quantity="other">안전 항목이 %1$d건 남아 있어요.</item>
     </plurals>
 
+    <string name="state_boarded">출발 전에 알아 둘 것</string>
+    <string name="state_away">다음 운행에 넘길 내용 저장됨</string>
+    <string name="empty_handover">넘겨받을 것이 없어요. 지난 운행에서 이상이 없었어요.</string>
+    <string name="voice_none">바통입니다. 지난 운행에서 넘겨받을 것이 없어요.</string>
+    <string name="hint_tap_to_ack">확인한 항목은 눌러서 내릴 수 있어요 (지금 켜진 안전 경고는 제외)</string>
+    <string name="parked_hint">지금 내리면 다음 운행에 이렇게 전달돼요:</string>
+    <string name="preview_setting">%1$s — 내리기 전에 되돌릴 수 있어요</string>
+    <plurals name="voice_intro">
+        <item quantity="other">바통입니다. 출발 전에 알아 두실 것이 %1$d가지 있어요.</item>
+    </plurals>
+    <string name="voice_receive_prompt">받으셨으면 \"받았어요\"라고 말씀해 주세요.</string>
+    <string name="voice_received">수령을 기록했어요.</string>
+    <string name="listening_hint">🎤 듣는 중… \"받았어요\"라고 말씀하세요</string>
+
     <string name="item_warning_on">%1$s 경고등이 켜져 있어요</string>
     <string name="item_setting">%1$s 상태로 넘겨받았어요</string>
     <string name="item_engine_oil_low">엔진오일이 부족해요 — 출발 전에 점검하세요</string>
@@ -89,7 +103,6 @@
     <string name="tt_WATER_SEPARATOR">연료 수분 분리기</string>
     <string name="tt_IMMOBILIZER">이모빌라이저</string>
     <string name="tt_ESC_OFF">차체 자세 제어(ESC) 꺼짐</string>
-    <string name="tt_PASSENGER_AIRBAG_OFF">조수석 에어백 꺼짐</string>
     <string name="tt_CHILD_PRESENCE_DETECTION_OFF">뒷좌석 승객 감지 꺼짐</string>
     <string name="tt_I_PEDAL">i-Pedal(원페달 주행) 켜짐</string>
     <string name="tt_CREEP_OFF">크리프 꺼짐</string>
@@ -109,18 +122,4 @@
     <plurals name="voice_more">
         <item quantity="other">외 %1$d건이 더 있어요.</item>
     </plurals>
-
-    <string name="state_boarded">출발 전에 알아 둘 것</string>
-    <string name="state_away">다음 운행에 넘길 내용 저장됨</string>
-    <string name="empty_handover">넘겨받을 것이 없어요. 지난 운행에서 이상이 없었어요.</string>
-    <string name="voice_none">바통입니다. 지난 운행에서 넘겨받을 것이 없어요.</string>
-    <string name="hint_tap_to_ack">확인한 항목은 눌러서 내릴 수 있어요 (지금 켜진 안전 경고는 제외)</string>
-    <string name="parked_hint">지금 내리면 다음 운행에 이렇게 전달돼요:</string>
-    <string name="preview_setting">%1$s — 내리기 전에 되돌릴 수 있어요</string>
-    <plurals name="voice_intro">
-        <item quantity="other">바통입니다. 출발 전에 알아 두실 것이 %1$d가지 있어요.</item>
-    </plurals>
-    <string name="voice_receive_prompt">받으셨으면 \"받았어요\"라고 말씀해 주세요.</string>
-    <string name="voice_received">수령을 기록했어요.</string>
-    <string name="listening_hint">🎤 듣는 중… \"받았어요\"라고 말씀하세요</string>
 </resources>

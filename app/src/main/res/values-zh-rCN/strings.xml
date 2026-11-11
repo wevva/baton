@@ -51,6 +51,20 @@
         <item quantity="other">还有 %1$d 项安全事项未处理。</item>
     </plurals>
 
+    <string name="state_boarded">出发前须知</string>
+    <string name="state_away">已保存给下次行驶的交接</string>
+    <string name="empty_handover">没有需要交接的事项，上次行驶无异常。</string>
+    <string name="voice_none">这里是接力。上次行驶没有需要交接的事项。</string>
+    <string name="hint_tap_to_ack">已确认的事项可点击移除(仍亮起的安全警告除外)</string>
+    <string name="parked_hint">现在下车将向下次行驶转达:</string>
+    <string name="preview_setting">%1$s — 下车前可恢复</string>
+    <plurals name="voice_intro">
+        <item quantity="other">这里是接力。出发前有%1$d项需要了解。</item>
+    </plurals>
+    <string name="voice_receive_prompt">确认后请说“已接收”。</string>
+    <string name="voice_received">已记录接收。</string>
+    <string name="listening_hint">🎤 正在聆听…请说“已接收”</string>
+
     <string name="item_warning_on">%1$s警告灯亮起</string>
     <string name="item_setting">以%1$s状态交接</string>
     <string name="item_engine_oil_low">机油不足 — 请在出发前检查</string>
@@ -89,7 +103,6 @@
     <string name="tt_WATER_SEPARATOR">燃油水分离器</string>
     <string name="tt_IMMOBILIZER">防盗锁止</string>
     <string name="tt_ESC_OFF">车身稳定控制(ESC)关闭</string>
-    <string name="tt_PASSENGER_AIRBAG_OFF">副驾驶安全气囊关闭</string>
     <string name="tt_CHILD_PRESENCE_DETECTION_OFF">后排乘员检测关闭</string>
     <string name="tt_I_PEDAL">i-Pedal单踏板驾驶开启</string>
     <string name="tt_CREEP_OFF">蠕行关闭</string>
@@ -109,18 +122,4 @@
     <plurals name="voice_more">
         <item quantity="other">另有%1$d项。</item>
     </plurals>
-
-    <string name="state_boarded">出发前须知</string>
-    <string name="state_away">已保存给下次行驶的交接</string>
-    <string name="empty_handover">没有需要交接的事项，上次行驶无异常。</string>
-    <string name="voice_none">这里是接力。上次行驶没有需要交接的事项。</string>
-    <string name="hint_tap_to_ack">已确认的事项可点击移除(仍亮起的安全警告除外)</string>
-    <string name="parked_hint">现在下车将向下次行驶转达:</string>
-    <string name="preview_setting">%1$s — 下车前可恢复</string>
-    <plurals name="voice_intro">
-        <item quantity="other">这里是接力。出发前有%1$d项需要了解。</item>
-    </plurals>
-    <string name="voice_receive_prompt">确认后请说“已接收”。</string>
-    <string name="voice_received">已记录接收。</string>
-    <string name="listening_hint">🎤 正在聆听…请说“已接收”</string>
 </resources>

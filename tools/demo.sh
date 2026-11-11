@@ -2,7 +2,7 @@
 # 바통 시연 시나리오 — 발표·영상 촬영용. 에뮬레이터 + Virtual Console(adb forward tcp:8088) 필요.
 # 사용: bash tools/demo.sh [쉬는 시간(초), 기본 4]
 #  1) 운행 중 타이어 공기압 경고가 두 번 켜졌다 꺼짐 (운전자는 대수롭지 않게 넘김)
-#  2) 운전자가 ESC(차체 자세 제어)를 끈 채 주차하고 하차
+#  2) 운전자가 ESC(차체 자세 제어)를 끈 채 휴게소에 주차하고, 시동을 켠 채 운전 교대
 #  3) 다음 운전자 탑승 → 바통이 '보이지 않는 것'을 화면+음성으로 안내 (이미 꺼진 경고라 계기판엔 안 보임)
 #  4) 다음 운전자가 ESC를 다시 켬 → 차량 신호로 확인되는 순간 "해제 확인"
 #  5) '받았어요'(수령증): 탑승 안내가 끝나면 8초 동안 말로, 또는 화면에서 누름 → 출발
@@ -20,7 +20,7 @@ say "1. 운행 중 타이어 공기압 경고가 켜졌다 꺼짐 (두 번)"
 vc lamp TPMS On; sleep 2; vc lamp TPMS Off; sleep 2
 vc lamp TPMS On; sleep 2; vc lamp TPMS Off; sleep "$P"
 
-say "2. 운전자가 ESC를 끈 채 주차하고 하차"
+say "2. 운전자가 ESC를 끈 채 휴게소에 주차하고 하차 (시동은 켠 채 교대)"
 vc lamp ESCOff On; sleep 2
 vc gear Park; sleep "$P"
 vc seat driver false; sleep "$P"

@@ -220,6 +220,39 @@ class HandoverMachineTest {
         assertTrue(exit(m, 1_000).handover.allClear)
     }
 
+    @Test fun `ST-05 시동을 켠 채 교대하면 ESC 꺼짐이 다음 운전자에게 넘어간다 (휴게소·택시 교대)`() {
+        val m = HandoverMachine(car)
+        drive(m, 0, setOf("ESC_OFF"))
+        exit(m, 1_000, lamps = setOf("ESC_OFF"))
+        val b = board(m, 9_000, lamps = setOf("ESC_OFF"))
+        assertEquals("ESC_OFF", b.handover.open.single().code)
+    }
+
+    @Test fun `ST-06 차가 꺼졌다 켜져 신호를 아직 모르면 설정은 넘기지 않고, 지난 운행 경고는 유지`() {
+        val m = HandoverMachine(car)
+        drive(m, 0, setOf("TPMS"), emptySet())
+        exit(m, 1_000, lamps = setOf("ESC_OFF"))
+        val b = m.onSnapshot(snap(9_000, lamps = null)) as State.Boarded
+        assertEquals(listOf(Type.WARNING_DURING_TRIP), b.handover.open.map { it.type })
+        assertEquals("TPMS", b.handover.open.single().code)
+    }
+
+    @Test fun `ST-07 재시동으로 차가 설정을 되돌렸으면 조용히 빠진다 ('해제 확인' 없음)`() {
+        val m = HandoverMachine(car)
+        drive(m, 0)
+        exit(m, 1_000, lamps = setOf("ESC_OFF"))
+        m.onSnapshot(snap(5_000, driverSeated = false, lamps = emptySet())) // 내린 사이 차가 되돌림
+        val b = board(m, 9_000, lamps = emptySet())
+        assertTrue(b.handover.open.isEmpty())
+        assertTrue(b.handover.resolved.isEmpty())
+    }
+
+    @Test fun `ST-08 조수석 에어백 OFF 표시(승객 구분 시스템이 자동 제어)는 넘기지 않는다`() {
+        val m = HandoverMachine(car)
+        drive(m, 0)
+        assertTrue(exit(m, 1_000, lamps = setOf("PASSENGER_AIRBAG_OFF")).handover.allClear)
+    }
+
     // ── MT: 소모품·배터리 ─────────────────────────────────────────
 
     @Test fun `MT-01 브레이크액·엔진오일은 안전, 워셔액은 참고`() {

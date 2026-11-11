@@ -92,7 +92,13 @@ class HandoverMachine(
                 when {
                     // 앱이 꺼져 있는 사이 누군가 이미 출발한 경우: 이력에 남기고 주행 상태로
                     !parked && s.gear != Gear.UNKNOWN -> { archive(h); State.Driving }
-                    driverBoarded(s) -> State.Boarded(h.copy(socAtBoard = s.batterySoc))
+                    // 바꿔 둔 설정은 다음 운전자가 앉는 순간 차가 '아직 그 상태'라고 알려 줄 때만 넘긴다.
+                    // 시동을 켠 채 교대(휴게소·택시·대리)하면 그대로 넘어가고, 차가 꺼졌다 켜져 신호를 아직 모르면 넘기지 않는다.
+                    // (현대·기아 ESC 꺼짐·SPORT 모드 등은 재시동하면 차가 스스로 되돌린다 — 취급설명서 확인 2026-11-11)
+                    driverBoarded(s) -> State.Boarded(h.copy(
+                        socAtBoard = s.batterySoc,
+                        open = h.open.filter { it.type != OpenItem.Type.SETTING_CHANGED || detector.isKnown(it, s) },
+                    ))
                     else -> State.Away(h)
                 }
             }

@@ -38,11 +38,11 @@ scene "운행 중 — 타이어 공기압 경고가 켜졌다 꺼집니다"
 q lamp TPMS On; sleep 3; q lamp TPMS Off; sleep 3
 scene "한 번 더 — 경고는 꺼졌지만 바통은 횟수를 기억합니다"
 q lamp TPMS On; sleep 3; q lamp TPMS Off; sleep 3
-scene "운전자가 ESC(차체 자세 제어)를 끈 채 주차합니다"
+scene "눈길에서 ESC(차체 자세 제어)를 끈 채 휴게소에 주차합니다"
 q lamp ESCOff On; sleep 3; q gear Park; sleep 2
 scene "내리기 전 화면: 다음 사람에게 넘어갈 것을 미리 보여 줍니다"
 sleep 7
-scene "운전자가 내립니다 — 운전석이 비면 인계를 저장합니다"
+scene "시동을 켠 채 운전 교대 — 운전석이 비면 인계를 저장합니다"
 q seat driver false; sleep 4; q soc 58; sleep 4
 # 음성 수령 장면: 운전자 목소리 대신 "받았어요" 녹음을 음성 인식에 넣는다(디버그 빌드 전용 주입). 영상에는 같은 소리를 합성한다
 PCM="$HERE/../build/test_audio/receive_ko.pcm"
