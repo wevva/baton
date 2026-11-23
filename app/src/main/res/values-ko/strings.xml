@@ -63,6 +63,10 @@
     </plurals>
     <string name="voice_receive_prompt">받으셨으면 \"받았어요\"라고 말씀해 주세요.</string>
     <string name="voice_received">수령을 기록했어요.</string>
+    <!-- 수령 연출: 안전 항목이 남지 않았을 때만 (ReceiptCheer) -->
+    <string name="baton_touch">바통 터치!</string>
+    <string name="cheer_on">♪ 효과 켬</string>
+    <string name="cheer_off">♪ 효과 끔</string>
     <string name="listening_hint">🎤 듣는 중… \"받았어요\"라고 말씀하세요</string>
 
     <string name="item_warning_on">%1$s 경고등이 켜져 있어요</string>

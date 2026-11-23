@@ -63,6 +63,10 @@
     </plurals>
     <string name="voice_receive_prompt">确认后请说“已接收”。</string>
     <string name="voice_received">已记录接收。</string>
+    <!-- 수령 연출: 안전 항목이 남지 않았을 때만 (ReceiptCheer) -->
+    <string name="baton_touch">接力棒交接！</string>
+    <string name="cheer_on">♪ 效果 开</string>
+    <string name="cheer_off">♪ 效果 关</string>
     <string name="listening_hint">🎤 正在聆听…请说“已接收”</string>
 
     <string name="item_warning_on">%1$s警告灯亮起</string>

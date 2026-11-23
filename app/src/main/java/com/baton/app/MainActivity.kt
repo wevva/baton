@@ -79,6 +79,7 @@ class MainActivity : ComponentActivity() {
                         onUndo = controller::undo,
                         onReceive = controller::receive,
                         onHistory = { history = true },
+                        onCheer = controller::toggleCheer,
                     )
                 }
             }

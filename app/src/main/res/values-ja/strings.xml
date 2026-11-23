@@ -63,6 +63,10 @@
     </plurals>
     <string name="voice_receive_prompt">確認したら「受け取りました」と言ってください。</string>
     <string name="voice_received">受け取りを記録しました。</string>
+    <!-- 수령 연출: 안전 항목이 남지 않았을 때만 (ReceiptCheer) -->
+    <string name="baton_touch">バトンタッチ！</string>
+    <string name="cheer_on">♪ 効果オン</string>
+    <string name="cheer_off">♪ 効果オフ</string>
     <string name="listening_hint">🎤 聞き取り中…「受け取りました」と言ってください</string>
 
     <string name="item_warning_on">%1$s警告灯が点灯しています</string>

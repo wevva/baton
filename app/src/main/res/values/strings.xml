@@ -66,6 +66,10 @@
     </plurals>
     <string name="voice_receive_prompt">If you\'ve got it, just say \"got it\".</string>
     <string name="voice_received">Receipt recorded.</string>
+    <!-- 수령 연출: 안전 항목이 남지 않았을 때만 (ReceiptCheer) -->
+    <string name="baton_touch">Baton passed!</string>
+    <string name="cheer_on">♪ Effect on</string>
+    <string name="cheer_off">♪ Effect off</string>
     <string name="listening_hint">🎤 Listening… say \"got it\"</string>
 
     <string name="item_warning_on">%1$s warning light is on</string>

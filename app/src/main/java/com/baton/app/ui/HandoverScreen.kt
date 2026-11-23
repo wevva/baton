@@ -1,5 +1,9 @@
 package com.baton.app.ui
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,9 +26,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -64,6 +73,7 @@ fun HandoverScreen(
     onUndo: () -> Unit = {},
     onReceive: () -> Unit = {},
     onHistory: () -> Unit = {},
+    onCheer: () -> Unit = {},
 ) {
     // 화면 언어 = 현재 앱 설정 언어 (LocalConfiguration이 바뀌면 다시 그림)
     val config = LocalConfiguration.current
@@ -71,7 +81,13 @@ fun HandoverScreen(
     val t = remember(config, ui.profile.driverSeat) { ItemText(ctx, config.locales[0], ui.profile.driverSeat) }
     Box(Modifier.fillMaxSize().background(C.bg)) {
         Column(Modifier.fillMaxSize().padding(horizontal = 48.dp, vertical = 32.dp)) {
-            TopBar(t, t.locale, onLocale, onDiagnostics, onHistory = if (ui.state is State.Driving) null else onHistory)
+            TopBar(
+                t, t.locale, onLocale, onDiagnostics,
+                onHistory = if (ui.state is State.Driving) null else onHistory,
+                // 연출 설정도 주차 중에만 (주행 중 화면 조작 최소화)
+                cheer = if (ui.state is State.Driving) null else ui.cheer,
+                onCheer = onCheer,
+            )
             Spacer(Modifier.height(24.dp))
             when (val s = ui.state) {
                 State.Driving -> Driving(t, ui)
@@ -84,6 +100,61 @@ fun HandoverScreen(
         if (undoable != null && ui.state is State.Boarded) {
             UndoBar(t, undoable, onUndo, Modifier.align(Alignment.BottomCenter))
         }
+        val at = ui.celebrateAt
+        if (at != null && ui.state is State.Boarded) {
+            BatonTouch(t, at, Modifier.align(Alignment.Center))
+        }
+    }
+}
+
+/**
+ * 수령 순간 "바통 터치!" (약 1.8초). 바통이 왼쪽에서 날아와 가운데에서 멈추고 글자가 튀어나온 뒤 사라진다.
+ * 화면을 가리는 시간이 짧고 터치를 막지 않는다. 주차(탑승) 상태에서만 나온다.
+ */
+@Composable
+private fun BatonTouch(t: ItemText, key: Long, modifier: Modifier) {
+    var visible by remember(key) { mutableStateOf(true) }
+    val fly = remember(key) { Animatable(0f) }
+    val pop = remember(key) { Animatable(0f) }
+    val fade = remember(key) { Animatable(1f) }
+    LaunchedEffect(key) {
+        fly.animateTo(1f, tween(450, easing = FastOutSlowInEasing))
+        pop.animateTo(1f, tween(250, easing = FastOutSlowInEasing))
+        kotlinx.coroutines.delay(700)
+        fade.animateTo(0f, tween(400, easing = LinearEasing))
+        visible = false
+    }
+    if (!visible) return
+    Column(
+        modifier.graphicsLayer { alpha = fade.value },
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        // 바통: 노랑-흰-노랑 세 토막의 막대
+        Row(
+            Modifier
+                .graphicsLayer {
+                    translationX = (fly.value - 1f) * 900f
+                    rotationZ = -18f + 18f * fly.value
+                }
+                .clip(RoundedCornerShape(28.dp)),
+        ) {
+            Box(Modifier.width(90.dp).height(56.dp).background(C.todo))
+            Box(Modifier.width(90.dp).height(56.dp).background(C.text))
+            Box(Modifier.width(90.dp).height(56.dp).background(C.todo))
+        }
+        Spacer(Modifier.height(24.dp))
+        Text(
+            t.str(R.string.baton_touch),
+            color = C.done, fontSize = 64.sp, fontWeight = FontWeight.Black,
+            modifier = Modifier
+                .graphicsLayer {
+                    val sc = 0.6f + 0.4f * pop.value
+                    scaleX = sc; scaleY = sc; alpha = pop.value
+                }
+                .clip(RoundedCornerShape(24.dp))
+                .background(C.bg.copy(alpha = 0.85f))
+                .padding(horizontal = 36.dp, vertical = 12.dp),
+        )
     }
 }
 
@@ -109,7 +180,12 @@ private fun UndoBar(t: ItemText, item: OpenItem, onUndo: () -> Unit, modifier: M
 }
 
 @Composable
-private fun TopBar(t: ItemText, locale: Locale, onLocale: (Locale) -> Unit, onDiagnostics: (() -> Unit)?, onHistory: (() -> Unit)?) {
+private fun TopBar(
+    t: ItemText, locale: Locale, onLocale: (Locale) -> Unit, onDiagnostics: (() -> Unit)?, onHistory: (() -> Unit)?,
+    /** null이면 숨김 (주행 중) */
+    cheer: Boolean? = null,
+    onCheer: () -> Unit = {},
+) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(t.str(R.string.app_name), color = C.text, fontSize = 30.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.weight(1f))
@@ -121,6 +197,19 @@ private fun TopBar(t: ItemText, locale: Locale, onLocale: (Locale) -> Unit, onDi
                     .padding(horizontal = 22.dp),
                 contentAlignment = Alignment.Center,
             ) { Text(t.str(R.string.history_button), color = C.text, fontSize = 22.sp, fontWeight = FontWeight.Bold) }
+        }
+        if (cheer != null) {
+            Box(
+                Modifier.padding(end = 16.dp).heightIn(min = TOUCH).widthIn(min = TOUCH)
+                    .clip(RoundedCornerShape(14.dp)).background(C.card).clickable { onCheer() }
+                    .padding(horizontal = 22.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    t.str(if (cheer) R.string.cheer_on else R.string.cheer_off),
+                    color = if (cheer) C.text else C.sub, fontSize = 22.sp, fontWeight = FontWeight.Bold,
+                )
+            }
         }
         for (l in ItemText.SUPPORTED) {
             val selected = l.language == locale.language
