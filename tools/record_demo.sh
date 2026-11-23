@@ -59,7 +59,8 @@ sleep 8
 scene "ESC를 다시 켜면 차량 신호로 해결을 확인하고 스스로 지웁니다"
 q lamp ESCOff Off; sleep 9
 scene "받는 사람의 언어로 — 일본어 (한국어·영어·일본어·중국어)"
-tap "JA"; sleep 6; tap "KO"; sleep 3
+# 언어는 버튼 하나(🌐) → 목록에서 고른다
+tap "🌐"; sleep 1; tap "日本語"; sleep 6; tap "🌐"; sleep 1; tap "한국어"; sleep 3
 scene "안전 항목을 남긴 채 출발하면 한 번만 음성으로 알립니다"
 q gear Drive; sleep 14
 scene "주행 중에는 Pleos가 앱 화면을 막습니다 — 바통은 출발할 때 음성으로 한 번만 알립니다"
