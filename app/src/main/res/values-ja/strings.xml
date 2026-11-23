@@ -56,6 +56,7 @@
     <string name="empty_handover">引き継ぎ事項はありません。前回の走行で異常はありませんでした。</string>
     <string name="voice_none">バトンです。前回の走行から引き継ぐことはありません。</string>
     <string name="hint_tap_to_ack">確認した項目はタップで消せます(点灯中の安全警告を除く)</string>
+    <string name="parked_nothing">今降りても、次の走行に引き継ぐものはありません。</string>
     <string name="parked_hint">今降りると次の走行にこう伝わります:</string>
     <string name="preview_setting">%1$s — 降りる前に戻せます</string>
     <plurals name="voice_intro">

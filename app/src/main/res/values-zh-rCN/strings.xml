@@ -56,6 +56,7 @@
     <string name="empty_handover">没有需要交接的事项，上次行驶无异常。</string>
     <string name="voice_none">这里是接力。上次行驶没有需要交接的事项。</string>
     <string name="hint_tap_to_ack">已确认的事项可点击移除(仍亮起的安全警告除外)</string>
+    <string name="parked_nothing">现在下车，没有需要转达给下次行驶的事项。</string>
     <string name="parked_hint">现在下车将向下次行驶转达:</string>
     <string name="preview_setting">%1$s — 下车前可恢复</string>
     <plurals name="voice_intro">

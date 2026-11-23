@@ -286,7 +286,8 @@ private fun Parked(t: ItemText, preview: List<OpenItem>, compact: Boolean) {
     Text(t.str(R.string.state_parked), color = C.text, fontSize = 40.sp, fontWeight = FontWeight.Bold)
     Spacer(Modifier.height(20.dp))
     if (preview.isEmpty()) {
-        Text(t.str(R.string.all_clear), color = C.done, fontSize = 28.sp)
+        // 아직 아무 일도 없었는데 "모두 해결됐어요"라고 하면 어색하다 → 넘길 것이 없다고만 말한다
+        Text(t.str(R.string.parked_nothing), color = C.done, fontSize = 28.sp, lineHeight = 38.sp, style = WORDS)
     } else {
         Text(t.str(R.string.parked_hint), color = C.sub, fontSize = 22.sp)
         Spacer(Modifier.height(16.dp))

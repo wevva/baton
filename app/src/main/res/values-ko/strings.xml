@@ -56,6 +56,7 @@
     <string name="empty_handover">넘겨받을 것이 없어요. 지난 운행에서 이상이 없었어요.</string>
     <string name="voice_none">바통입니다. 지난 운행에서 넘겨받을 것이 없어요.</string>
     <string name="hint_tap_to_ack">확인한 항목은 눌러서 내릴 수 있어요 (지금 켜진 안전 경고는 제외)</string>
+    <string name="parked_nothing">지금 내리면 다음 운행에 넘길 것이 없어요.</string>
     <string name="parked_hint">지금 내리면 다음 운행에 이렇게 전달돼요:</string>
     <string name="preview_setting">%1$s — 내리기 전에 되돌릴 수 있어요</string>
     <plurals name="voice_intro">

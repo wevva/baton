@@ -58,6 +58,7 @@
     <string name="empty_handover">Nothing to pass on — no issues on the last drive.</string>
     <string name="voice_none">Baton here. Nothing to pass on from the last drive.</string>
     <string name="hint_tap_to_ack">Tap an item you have checked to clear it (warnings that are still on stay)</string>
+    <string name="parked_nothing">If you leave now, there is nothing to hand over.</string>
     <string name="parked_hint">If you leave now, the next driver will be told:</string>
     <string name="preview_setting">%1$s — you can switch it back before leaving</string>
     <plurals name="voice_intro">

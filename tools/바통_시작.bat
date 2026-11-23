@@ -62,7 +62,9 @@ echo   6  타이어 경고등 끄기
 echo   7  ESC 끔 표시등 켜기  (앞사람이 ESC를 꺼 둔 상황)
 echo   8  ESC 끔 표시등 끄기  (ESC를 다시 켬)
 echo   9  경고등 모두 끄기
-echo   R  처음부터 다시 (앱 기록 지우기 + 주차, 운전석 앉음, 경고등 끔)
+echo   B  배터리 58%%로   (주차 중 배터리가 줄어든 상황)
+echo   C  배터리 80%%로   (주차 중 충전한 상황)
+echo   R  처음부터 다시 (앱 기록 지우기 + 주차, 운전석 앉음, 경고등 끔, 배터리 62%%)
 echo   0  끝내기 (가짜 차는 켜 둔 채로)
 echo  --------------------------------------------
 set "K="
@@ -76,6 +78,8 @@ if "%K%"=="6" call :vc lamp TPMS Off
 if "%K%"=="7" call :vc lamp ESCOff On
 if "%K%"=="8" call :vc lamp ESCOff Off
 if "%K%"=="9" call :vc lamps_off
+if /i "%K%"=="B" call :vc soc 58
+if /i "%K%"=="C" call :vc soc 80
 if /i "%K%"=="R" call :reset
 if "%K%"=="0" goto :eof
 goto menu
@@ -92,6 +96,7 @@ echo   처음 상태로 돌리는 중... (10초쯤)
 "%BASH%" "%VC%" lamps_off >nul 2>&1 <nul
 "%BASH%" "%VC%" seat driver true >nul 2>&1 <nul
 "%BASH%" "%VC%" gear Park >nul 2>&1 <nul
+"%BASH%" "%VC%" soc 62 >nul 2>&1 <nul
 ping -n 5 127.0.0.1 >nul
 "%ADB%" shell am start -n com.baton.app/.MainActivity >nul 2>&1 <nul
 echo   → 처음 상태입니다. 운전석에 앉아 있고 기어는 P입니다.
