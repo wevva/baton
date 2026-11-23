@@ -8,6 +8,4 @@ captures/
 *.jks
 keystore.properties
 
-# 제출 APK는 제출 직전에 한 번만 커밋 (용량 관리). 그때 이 줄을 지운다
-apk/
 docs/video/
