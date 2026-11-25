@@ -86,6 +86,16 @@ BatonApp · BatonController · HandoverService(감시) · BootReceiver(자동 �
 > 처음이라면 단계별 안내서 [docs/USER_GUIDE.md](docs/USER_GUIDE.md) 를 보세요.
 
 - JDK 17, Android SDK Platform 35, Pleos Connect 에뮬레이터(API 34 Automotive)
+
+### 심사·시연 환경
+| 항목 | 값 |
+|---|---|
+| 에뮬레이터 | Pleos Connect v2.1.0 (시스템 이미지 `android-34 / pleos_car_emulator / x86_64`) |
+| 메인 화면 규격 | 2560 × 1440 px, 160 dpi (가로형) |
+| 보조 디스플레이 | 400 × 600 px, 120 dpi (에뮬레이터 기본 구성, 바통은 쓰지 않음) |
+| 앱 화면 배치 | 전체 화면과 Pleos 반 칸(내비 옆, 약 840dp) 모두 지원. 폭에 따라 2단/1단으로 바뀜 |
+| 실제 차량 | 필요 없음. 차량 신호는 Pleos Virtual Console로 넣음 |
+
 ```bash
 ./gradlew assembleDebug            # 디버그
 ./gradlew assembleRelease          # 릴리스 → apk/바통랩_바통_release.apk (서명 키: BATON_KEYSTORE_PROPS 또는 C:/dev/keys/keystore.properties)
