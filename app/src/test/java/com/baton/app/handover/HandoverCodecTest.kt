@@ -114,4 +114,18 @@ class HandoverCodecTest {
         val b = HandoverCodec.decode(json)!!.first as State.Boarded
         assertEquals(setOf("SETTING_CHANGED:I_PEDAL"), b.handover.acknowledged)
     }
+
+    @Test fun `CD-17 이름이 긴 경고(12V 배터리·전자식 주차 브레이크 등)의 확인 기록도 재시작 뒤 남는다`() {
+        // 분류표의 모든 '확인 가능한' 항목을 한꺼번에 확인한 인계 — 가장 긴 키(44자)까지 살아남아야 한다
+        val all = Detector.sort(Telltales.SPECS.entries.map { (code, spec) ->
+            if (spec.kind == Telltales.Kind.SETTING) OpenItem(Type.SETTING_CHANGED, code = code)
+            else OpenItem(Type.WARNING_DURING_TRIP, code = code, value = 1)
+        })
+        val acked = h.copy(open = all, acknowledged = all.filter { HandoverMachine.canAcknowledge(it) }.map { it.key }.toSet())
+        assertTrue(acked.acknowledged.any { it.length > 40 })
+        val b = HandoverCodec.decode(HandoverCodec.encode(State.Boarded(acked), emptyList()))!!.first as State.Boarded
+        assertEquals(acked.acknowledged, b.handover.acknowledged)
+        // 키 길이 상한은 실제 키보다 넉넉하다
+        assertTrue(all.all { it.key.length <= HandoverCodec.MAX_KEY_LENGTH })
+    }
 }

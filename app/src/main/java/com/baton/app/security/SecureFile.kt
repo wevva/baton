@@ -18,9 +18,24 @@ import javax.crypto.spec.GCMParameterSpec
  */
 class SecureFile(private val file: File, private val keyAlias: String = DEFAULT_ALIAS) {
 
+    /** 키는 한 번 꺼내 재사용한다 (Keystore를 매번 여는 비용 절감). 키가 무효가 되면 비우고 다시 꺼낸다 */
+    @Volatile private var cachedKey: SecretKey? = null
+
+    private fun cipher(mode: Int, iv: ByteArray? = null): Cipher {
+        fun make(k: SecretKey) = Cipher.getInstance(TRANSFORMATION).apply {
+            if (iv == null) init(mode, k) else init(mode, k, GCMParameterSpec(TAG_BYTES * 8, iv))
+        }
+        // 키 꺼내기·만들기는 한 번에 한 스레드만 (두 스레드가 동시에 새 키를 만들면 먼저 쓴 파일을 못 읽게 된다)
+        val k = cachedKey ?: synchronized(this) { cachedKey ?: key().also { cachedKey = it } }
+        return try {
+            make(k)
+        } catch (e: java.security.GeneralSecurityException) {
+            make(synchronized(this) { key().also { cachedKey = it } })
+        }
+    }
+
     fun write(plain: ByteArray) {
-        val cipher = Cipher.getInstance(TRANSFORMATION)
-        cipher.init(Cipher.ENCRYPT_MODE, key())
+        val cipher = cipher(Cipher.ENCRYPT_MODE)
         val out = MAGIC + cipher.iv + cipher.doFinal(plain)
         val tmp = File(file.parentFile, file.name + ".tmp")
         tmp.writeBytes(out)
@@ -38,8 +53,7 @@ class SecureFile(private val file: File, private val keyAlias: String = DEFAULT_
         if (data.size < header + TAG_BYTES || !data.copyOfRange(0, MAGIC.size).contentEquals(MAGIC)) return null
         return runCatching {
             val iv = data.copyOfRange(MAGIC.size, header)
-            val cipher = Cipher.getInstance(TRANSFORMATION)
-            cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(TAG_BYTES * 8, iv))
+            val cipher = cipher(Cipher.DECRYPT_MODE, iv)
             cipher.doFinal(data, header, data.size - header)
         }.getOrNull()
     }

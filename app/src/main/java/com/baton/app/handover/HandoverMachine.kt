@@ -71,7 +71,8 @@ class HandoverMachine(
     fun onSnapshot(s: VehicleSnapshot): State {
         last = s
         recordTrip(s)
-        val parked = s.gear == Gear.PARK
+        // 주차 상태에서 기어를 잠깐 모르게 되면 P단이 유지된 것으로 본다 (신호 끊김 ≠ 출발)
+        val parked = s.gear == Gear.PARK || (s.gear == Gear.UNKNOWN && state != State.Driving)
         val leaving = driverLeft(s)
         leftSince = if (leaving) (leftSince ?: s.timestampMs) else null
         val leftLongEnough = leaving && s.timestampMs - (leftSince ?: s.timestampMs) >= leaveDebounceMs
@@ -79,7 +80,8 @@ class HandoverMachine(
         state = when (val cur = state) {
             State.Driving -> if (parked) State.Parked else cur
             State.Parked -> when {
-                !parked -> State.Driving
+                // 기어 값을 잠깐 모르게 된 것(UNKNOWN)은 출발이 아니다 — 하차 판단을 이어 간다 (SM-36)
+                !parked && s.gear != Gear.UNKNOWN -> State.Driving
                 leftLongEnough -> {
                     val h = Handover(s.timestampMs, s.batterySoc, handoverItems(s))
                     tripWarnings.clear() // 이번 운행 기록은 인계로 넘어갔다

@@ -15,6 +15,12 @@ object HandoverCodec {
     const val VERSION = 1
     private const val MAX_ITEMS = 64
     private const val MAX_HISTORY = 50
+    /**
+     * 확인 기록 키 길이 상한 (변조로 아주 긴 문자열을 넣는 것만 막는다).
+     * 가장 긴 실제 키는 "WARNING_DURING_TRIP:ELECTRONIC_PARKING_BRAKE"(44자). 예전 상한 32자는 이런 키를 버려
+     * 앱을 다시 켜면 확인한 항목이 다시 나타났다 (2026-11-26 무작위 시험 FZ-01에서 발견)
+     */
+    const val MAX_KEY_LENGTH = 96
 
     fun encode(state: State, history: List<Handover>): String {
         val root = JSONObject().put("v", VERSION)
@@ -69,7 +75,7 @@ object HandoverCodec {
             receivedAtMs = if (o.has("receivedAt") && !o.isNull("receivedAt")) o.getLong("receivedAt") else null,
             open = o.optJSONArray("open").items { decItem(it) }.distinctBy { it.key },
             acknowledged = o.optJSONArray("ack").let { a ->
-                if (a == null) emptySet() else (0 until minOf(a.length(), MAX_ITEMS)).mapNotNull { a.optString(it).takeIf { s -> s.length in 1..32 } }.toSet()
+                if (a == null) emptySet() else (0 until minOf(a.length(), MAX_ITEMS)).mapNotNull { a.optString(it).takeIf { s -> s.length in 1..MAX_KEY_LENGTH } }.toSet()
             },
             resolved = o.optJSONArray("resolved").items { r ->
                 decItem(r.optJSONObject("item"))?.let { Resolved(it, r.optLong("at")) }
