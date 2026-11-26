@@ -8,7 +8,6 @@ import com.baton.app.handover.HandoverMachine
 import com.baton.app.handover.HandoverMachine.State
 import com.baton.app.handover.HandoverStore
 import com.baton.app.handover.OpenItem
-import com.baton.app.handover.ReceiptCheer
 import com.baton.app.i18n.ItemText
 import com.baton.app.security.BatonLog
 import com.baton.app.vehicle.ProfileDiscovery
@@ -41,10 +40,6 @@ data class UiState(
     val history: List<HandoverMachine.Handover> = emptyList(),
     /** 탑승 안내 직후 "받았어요"를 듣는 중 */
     val listening: Boolean = false,
-    /** 수령 순간 "바통 터치!" 연출을 할지 (사용자 설정, 기본 켬) */
-    val cheer: Boolean = true,
-    /** 마지막 "바통 터치!" 연출 시각. 화면은 이 값이 바뀔 때 한 번 애니메이션한다 */
-    val celebrateAt: Long? = null,
 )
 
 /**
@@ -72,18 +67,6 @@ class BatonController(
     private var profile = VehicleProfile()
     private var undoJob: Job? = null
     private var started = false
-    /** 화면 설정(민감 정보 아님)이라 암호화 저장소와 분리해 둔다 */
-    private val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-
-    init {
-        _ui.value = _ui.value.copy(cheer = prefs.getBoolean(KEY_CHEER, true))
-    }
-
-    fun toggleCheer() {
-        val on = !_ui.value.cheer
-        prefs.edit().putBoolean(KEY_CHEER, on).apply()
-        _ui.value = _ui.value.copy(cheer = on)
-    }
 
     fun start() {
         if (started) return
@@ -185,24 +168,6 @@ class BatonController(
         stopListening()
         m.receive(System.currentTimeMillis())
         commit(m)
-        afterReceive(m, viaVoice = false)
-    }
-
-    /**
-     * 수령 직후 연출. 안전 항목이 남지 않았으면 "바통 터치!", 남았으면 차분하게.
-     * 음성으로 받았을 때는 손이 아니라 귀로 확인하도록 반드시 한마디 한다.
-     */
-    private fun afterReceive(m: HandoverMachine, viaVoice: Boolean) {
-        val h = (m.state as? State.Boarded)?.handover ?: return
-        val locale = _ui.value.locale
-        val text = ItemText(context, locale, profile.driverSeat)
-        if (_ui.value.cheer && ReceiptCheer.cheerful(h)) {
-            BatonLog.i(TAG, "바통 터치")
-            _ui.value = _ui.value.copy(celebrateAt = System.currentTimeMillis())
-            speaker.say(text.str(R.string.baton_touch), locale)
-        } else if (viaVoice) {
-            speaker.say(text.str(R.string.voice_received), locale)
-        }
     }
 
     /** 탑승 안내가 끝난 직후에만 잠깐 듣는다 (항상 듣지 않음) */
@@ -222,7 +187,7 @@ class BatonController(
                     m.receive(System.currentTimeMillis())
                     commit(m)
                     BatonLog.i(TAG, "음성으로 수령")
-                    afterReceive(m, viaVoice = true)
+                    speaker.say(ItemText(context, locale, profile.driverSeat).str(R.string.voice_received), locale)
                 }
             },
             onEnd = { _ui.value = _ui.value.copy(listening = false) },
@@ -294,7 +259,5 @@ class BatonController(
         /** 되돌리기 가능 시간. 차 안에서는 손이 늦을 수 있어 일반 앱(약 5초)보다 길게 */
         const val UNDO_WINDOW_MS = 8_000L
         private const val MAX_DISCOVERY_TRIES = 30
-        private const val PREFS = "baton_ui"
-        private const val KEY_CHEER = "cheer"
     }
 }
